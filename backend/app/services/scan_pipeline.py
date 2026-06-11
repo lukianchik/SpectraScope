@@ -25,11 +25,20 @@ def run_scan_pipeline(scan_id: str, db: Session, settings: Settings | None = Non
     scan = db.get(Scan, scan_id)
     if scan is None:
         raise ValueError(f"Scan {scan_id} not found")
+    if scan.status not in {"created", "failed"}:
+        logger.info("Skipping scan pipeline for scan_id=%s with status=%s", scan_id, scan.status)
+        return
 
     try:
         scan.status = "running"
         scan.started_at = datetime.utcnow()
+        scan.finished_at = None
         scan.error_message = None
+        scan.assets.clear()
+        scan.findings.clear()
+        if scan.report is not None:
+            db.delete(scan.report)
+            scan.report = None
         db.commit()
 
         target = normalize_target(scan.target)
@@ -57,9 +66,14 @@ def run_scan_pipeline(scan_id: str, db: Session, settings: Settings | None = Non
 
         urls = [result.url for result in alive_results if result.url]
         nuclei_findings = NucleiAdapter(settings).scan(urls)
+        seen_findings: set[tuple[str, str | None, str]] = set()
         for result in nuclei_findings:
             hostname = _hostname_from_finding_host(result.host)
             asset = assets_by_hostname.get(hostname)
+            dedupe_key = (hostname, result.template_id, result.name)
+            if dedupe_key in seen_findings:
+                continue
+            seen_findings.add(dedupe_key)
             finding = Finding(
                 scan_id=scan.id,
                 asset_id=asset.id if asset else None,

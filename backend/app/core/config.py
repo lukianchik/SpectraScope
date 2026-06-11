@@ -16,8 +16,14 @@ class Settings(BaseSettings):
     enable_real_scanners: bool = Field(default=False, alias="ENABLE_REAL_SCANNERS")
     enable_nmap: bool = Field(default=False, alias="ENABLE_NMAP")
     scanner_timeout_seconds: int = Field(default=60, alias="SCANNER_TIMEOUT_SECONDS")
+    allowed_target_domains: str = Field(default="", alias="ALLOWED_TARGET_DOMAINS")
+    celery_task_always_eager: bool = Field(default=False, alias="CELERY_TASK_ALWAYS_EAGER")
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore", populate_by_name=True)
+    model_config = SettingsConfigDict(env_file=(".env", "../.env"), extra="ignore", populate_by_name=True)
+
+    @property
+    def allowed_domain_list(self) -> list[str]:
+        return [item.strip().lower() for item in self.allowed_target_domains.split(",") if item.strip()]
 
 
 @lru_cache
