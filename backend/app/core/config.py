@@ -5,6 +5,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    service_name: str = Field(default="spectrascope-backend", alias="SERVICE_NAME")
+    log_level: str = Field(default="INFO", alias="LOG_LEVEL")
+    log_format: str = Field(default="json", alias="LOG_FORMAT")
     app_env: str = Field(default="dev", alias="APP_ENV")
     database_url: str = Field(
         default="postgresql+psycopg2://spectrascope:spectrascope@postgres:5432/spectrascope",

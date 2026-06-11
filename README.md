@@ -100,6 +100,18 @@ ALLOWED_TARGET_DOMAINS=example.com,example.org
 
 Subdomains of allowlisted domains are accepted. Direct IP targets are still rejected by default.
 
+## Observability
+
+The API exposes liveness/readiness probes and Prometheus metrics:
+
+```bash
+curl http://localhost:8000/health/live
+curl http://localhost:8000/health/ready
+curl http://localhost:8000/metrics
+```
+
+Application logs are JSON by default and are written to stdout for Docker, Loki, ELK, or cloud log collection. See `docs/observability.md` for the single-server and Kubernetes monitoring direction.
+
 ## Next Steps
 
 - Add authentication, authorization, and per-user scan ownership.

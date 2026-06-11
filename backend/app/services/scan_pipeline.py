@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from collections import Counter
 from datetime import datetime
 from urllib.parse import urlparse
@@ -9,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import Settings, get_settings
 from app.models import Asset, Finding, RiskReport, Scan, Service
+from app.core.metrics import SCAN_PIPELINE_DURATION_SECONDS, SCANS_COMPLETED_TOTAL, SCANS_FAILED_TOTAL
 from app.scanners.httpx import HttpxAdapter
 from app.scanners.nmap import NmapAdapter
 from app.scanners.nuclei import NucleiAdapter
@@ -21,6 +23,7 @@ SEVERITY_ORDER = {"critical": 5, "high": 4, "medium": 3, "low": 2, "info": 1}
 
 
 def run_scan_pipeline(scan_id: str, db: Session, settings: Settings | None = None) -> None:
+    started_at_monotonic = time.perf_counter()
     settings = settings or get_settings()
     scan = db.get(Scan, scan_id)
     if scan is None:
@@ -113,6 +116,8 @@ def run_scan_pipeline(scan_id: str, db: Session, settings: Settings | None = Non
         scan.status = "completed"
         scan.finished_at = datetime.utcnow()
         db.commit()
+        SCANS_COMPLETED_TOTAL.inc()
+        SCAN_PIPELINE_DURATION_SECONDS.observe(time.perf_counter() - started_at_monotonic)
         logger.info("Completed scan pipeline scan_id=%s assets=%s findings=%s", scan_id, len(assets_by_hostname), len(scan.findings))
     except Exception as exc:
         logger.exception("Scan pipeline failed scan_id=%s", scan_id)
@@ -123,6 +128,8 @@ def run_scan_pipeline(scan_id: str, db: Session, settings: Settings | None = Non
             failed_scan.finished_at = datetime.utcnow()
             failed_scan.error_message = str(exc)
             db.commit()
+        SCANS_FAILED_TOTAL.inc()
+        SCAN_PIPELINE_DURATION_SECONDS.observe(time.perf_counter() - started_at_monotonic)
         raise
 
 

@@ -5,6 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.config import Settings, get_settings
+from app.core.metrics import SCANS_BY_STATUS, SCANS_STARTED_TOTAL
 from app.db.session import get_db
 from app.models import Asset, Finding, RiskReport, Scan, ScanAuditLog
 from app.schemas.scan import (
@@ -61,6 +62,7 @@ def start_scan(
     _write_audit_log(db, scan_id=scan.id, target=scan.target, decision="allowed", reason=decision.reason)
     db.commit()
     db.refresh(scan)
+    SCANS_STARTED_TOTAL.labels(scan_profile=scan.scan_profile).inc()
     run_scan.delay(scan.id)
     return scan
 
@@ -85,6 +87,7 @@ def list_scans(
 
     total = db.scalar(count_query) or 0
     scans = list(db.scalars(query.order_by(Scan.created_at.desc()).limit(limit).offset(offset)))
+    _refresh_scan_status_metrics(db)
     return ScanListResponse(total=total, limit=limit, offset=offset, items=scans)
 
 
@@ -182,3 +185,9 @@ def _write_audit_log(db: Session, scan_id: str | None, target: str, decision: st
             metadata_json={"source": "api"},
         )
     )
+
+
+def _refresh_scan_status_metrics(db: Session) -> None:
+    counts = dict(db.execute(select(Scan.status, func.count()).group_by(Scan.status)).all())
+    for status_name in ["created", "running", "completed", "failed"]:
+        SCANS_BY_STATUS.labels(status=status_name).set(counts.get(status_name, 0))
