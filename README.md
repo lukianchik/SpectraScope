@@ -112,6 +112,17 @@ curl http://localhost:8000/metrics
 
 Application logs are JSON by default and are written to stdout for Docker, Loki, ELK, or cloud log collection. See `docs/observability.md` for the single-server and Kubernetes monitoring direction.
 
+## Local Vulnerable Lab
+
+A local-only vulnerable/demo lab is available in `lab/` for testing the SpectraScope pipeline against predictable services. It runs separately from the main backend stack and exposes only localhost-bound reverse proxy ports.
+
+```bash
+cd lab
+docker compose up --build
+```
+
+See `lab/README.md` before running it. The lab contains intentionally vulnerable or suspicious demo services and must not be exposed to the internet.
+
 ## Next Steps
 
 - Add authentication, authorization, and per-user scan ownership.
