@@ -1,0 +1,23 @@
+id: spectrascope-directory-listing-demo
+
+info:
+  name: Directory Listing Demo
+  author: spectrascope
+  severity: medium
+  description: Detects the local SpectraScope directory listing demo by known dummy filenames.
+  tags: spectrascope,lab,demo
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/"
+    matchers-condition: and
+    matchers:
+      - type: word
+        part: body
+        words:
+          - "backup.zip"
+      - type: word
+        part: body
+        words:
+          - "config.old"

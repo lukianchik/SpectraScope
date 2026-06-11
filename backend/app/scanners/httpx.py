@@ -8,15 +8,23 @@ class HttpxAdapter:
 
     def probe(self, hostnames: list[str]) -> list[HttpxResult]:
         if should_use_mock(self.settings):
+            fixed_ips = {
+                "api": "93.184.216.34",
+                "www": "93.184.216.34",
+                "admin": "93.184.216.35",
+                "blog": "93.184.216.36",
+                "dev": "93.184.216.37",
+            }
             return [
                 HttpxResult(
                     hostname=hostname,
                     url=f"https://{hostname}",
                     status_code=200,
-                    title="Mock web application",
-                    technologies=["mock-server"],
+                    title=_mock_title(hostname),
+                    technologies=_mock_technologies(hostname),
+                    ip=_mock_ip(hostname, fixed_ips, index),
                 )
-                for hostname in hostnames
+                for index, hostname in enumerate(hostnames)
             ]
 
         results: list[HttpxResult] = []
@@ -41,3 +49,24 @@ def _as_int(value: object) -> int | None:
         return int(value) if value is not None else None
     except (TypeError, ValueError):
         return None
+
+
+def _mock_ip(hostname: str, fixed_ips: dict[str, str], index: int) -> str:
+    prefix = hostname.split(".", 1)[0]
+    return fixed_ips.get(prefix, f"93.184.216.{40 + index}")
+
+
+def _mock_title(hostname: str) -> str:
+    prefix = hostname.split(".", 1)[0].replace("-", " ").title()
+    return f"{prefix} Service"
+
+
+def _mock_technologies(hostname: str) -> list[str]:
+    prefix = hostname.split(".", 1)[0]
+    if prefix in {"api", "auth", "app"}:
+        return ["nginx", "FastAPI"]
+    if prefix in {"admin", "portal", "grafana", "kibana"}:
+        return ["nginx", "React"]
+    if prefix in {"blog", "www", "docs"}:
+        return ["nginx", "static-site"]
+    return ["nginx"]

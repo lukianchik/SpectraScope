@@ -12,6 +12,10 @@ Severity = Literal["critical", "high", "medium", "low", "info"]
 class ScanStartRequest(BaseModel):
     target: str = Field(min_length=3, max_length=255, examples=["example.com"])
     scan_profile: str = Field(default="safe", max_length=64)
+    confirm_authorized: bool = Field(
+        default=False,
+        description="Must be true to confirm that you own or are authorized to assess the target.",
+    )
 
 
 class ScanResponse(BaseModel):
@@ -78,6 +82,41 @@ class RiskReportResponse(BaseModel):
     summary: str
     top_risks: list[dict]
     recommendations: list[str]
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ScanListResponse(BaseModel):
+    total: int
+    limit: int
+    offset: int
+    items: list[ScanResponse]
+
+
+class AssetListResponse(BaseModel):
+    total: int
+    limit: int
+    offset: int
+    items: list[AssetResponse]
+
+
+class FindingListResponse(BaseModel):
+    total: int
+    limit: int
+    offset: int
+    items: list[FindingResponse]
+
+
+class ScanAuditLogResponse(BaseModel):
+    id: UUID
+    scan_id: UUID | None
+    action: str
+    target: str
+    actor: str | None
+    decision: str
+    reason: str | None
+    metadata_json: dict | None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

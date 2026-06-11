@@ -13,6 +13,7 @@ This project is intended only for assets you own or are explicitly authorized to
 - Scanner adapters: `subfinder`, `httpx`, `nuclei`, optional `nmap`
 
 By default `ENABLE_REAL_SCANNERS=false`, so scanner adapters return mock results and do not execute external scanner binaries.
+The mock pipeline returns dashboard-ready preview data for `example.com`: 24 assets, 15 findings, top risks, and a generated report summary.
 
 ## Run
 
@@ -37,24 +38,46 @@ Start a test scan:
 ```bash
 curl -X POST http://localhost:8000/api/scans/start \
   -H "Content-Type: application/json" \
-  -d '{"target":"example.com","scan_profile":"safe"}'
+  -d '{"target":"example.com","scan_profile":"safe","confirm_authorized":true}'
 ```
 
 Then use the returned `id`:
 
 ```bash
 curl http://localhost:8000/api/scans/<scan_id>
-curl http://localhost:8000/api/scans/<scan_id>/assets
-curl http://localhost:8000/api/scans/<scan_id>/findings
+curl http://localhost:8000/api/scans
+curl "http://localhost:8000/api/scans/<scan_id>/assets?limit=50&offset=0"
+curl "http://localhost:8000/api/scans/<scan_id>/findings?severity=info"
 curl http://localhost:8000/api/scans/<scan_id>/report
+curl http://localhost:8000/api/scans/<scan_id>/audit
 ```
+
+## Local Development Without Docker
+
+For fast backend iteration, run the API with SQLite and eager Celery tasks:
+
+```bash
+cp .env.local.example .env
+cd backend
+python3 -m venv .venv
+. .venv/bin/activate
+pip install -r requirements.txt
+alembic upgrade head
+uvicorn app.main:app --reload
+```
+
+With `CELERY_TASK_ALWAYS_EAGER=true`, `POST /api/scans/start` runs the mock pipeline in the API process. Redis and the Celery worker are not required in this local profile.
 
 ## MVP Scope
 
 - FastAPI app with health, scan start, scan status, assets, findings, and report endpoints.
+- Scan listing endpoint with basic pagination and filters.
+- Asset and finding pagination with basic filters.
 - SQLAlchemy models and Alembic initial migration for scans, assets, services, findings, and risk reports.
+- Audit log table for scan launch authorization decisions.
 - Celery worker task `run_scan(scan_id)` with a safe scanner pipeline.
 - Target validation that accepts domains and rejects direct IP targets by default.
+- Target policy requiring explicit authorization confirmation and optional `ALLOWED_TARGET_DOMAINS` allowlist.
 - Scanner adapters with normalized Python objects and safe subprocess execution: no `shell=True`, timeout handling, binary detection, and error propagation.
 - Development mock mode for checking the whole flow without installing scanner tools.
 - Docker Compose services for backend, worker, Postgres, and Redis.
@@ -69,11 +92,41 @@ ENABLE_REAL_SCANNERS=true
 
 The initial `nmap` adapter is disabled unless `ENABLE_NMAP=true`. Its default command is intentionally limited and avoids aggressive flags.
 
+To restrict launches to an allowlist, set:
+
+```env
+ALLOWED_TARGET_DOMAINS=example.com,example.org
+```
+
+Subdomains of allowlisted domains are accepted. Direct IP targets are still rejected by default.
+
+## Observability
+
+The API exposes liveness/readiness probes and Prometheus metrics:
+
+```bash
+curl http://localhost:8000/health/live
+curl http://localhost:8000/health/ready
+curl http://localhost:8000/metrics
+```
+
+Application logs are JSON by default and are written to stdout for Docker, Loki, ELK, or cloud log collection. See `docs/observability.md` for the single-server and Kubernetes monitoring direction.
+
+## Local Vulnerable Lab
+
+A local-only vulnerable/demo lab is available in `lab/` for testing the SpectraScope pipeline against predictable services. It runs separately from the main backend stack and exposes only localhost-bound reverse proxy ports.
+
+```bash
+cd lab
+docker compose up --build
+```
+
+See `lab/README.md` before running it. The lab contains intentionally vulnerable or suspicious demo services and must not be exposed to the internet.
+
 ## Next Steps
 
 - Add authentication, authorization, and per-user scan ownership.
-- Add organization/project scoping and an allowlist policy for approved targets.
-- Add richer scanner result parsing and deduplication.
-- Add API pagination, filtering, and report export formats.
-- Add frontend React/Vite application in `frontend/`.
+- Add organization/project scoping.
+- Add richer scanner result parsing and persistent deduplication rules.
+- Add report export formats.
 - Add integration tests with ephemeral Postgres and Redis.

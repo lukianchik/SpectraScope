@@ -8,7 +8,33 @@ class SubfinderAdapter:
 
     def discover(self, target: str) -> list[SubfinderResult]:
         if should_use_mock(self.settings):
-            return [SubfinderResult(hostname=target), SubfinderResult(hostname=f"www.{target}")]
+            prefixes = [
+                "api",
+                "www",
+                "admin",
+                "blog",
+                "dev",
+                "app",
+                "auth",
+                "cdn",
+                "docs",
+                "mail",
+                "shop",
+                "status",
+                "staging",
+                "beta",
+                "portal",
+                "support",
+                "static",
+                "media",
+                "files",
+                "vpn",
+                "grafana",
+                "kibana",
+                "ci",
+                "old",
+            ]
+            return [SubfinderResult(hostname=f"{prefix}.{target}") for prefix in prefixes]
 
         command = ["subfinder", "-d", target, "-silent", "-json"]
         rows = run_jsonl_command(command, timeout=self.settings.scanner_timeout_seconds)
