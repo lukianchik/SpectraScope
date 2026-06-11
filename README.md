@@ -20,12 +20,6 @@ By default `ENABLE_REAL_SCANNERS=false`, so scanner adapters return mock results
 docker compose up --build
 ```
 
-If Docker Buildx is not available in WSL, use the no-build compose file:
-
-```bash
-docker compose -f docker-compose.nobuild.yml up
-```
-
 Open Swagger UI:
 
 ```text
