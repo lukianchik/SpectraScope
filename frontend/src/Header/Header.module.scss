@@ -1,0 +1,80 @@
+.header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 20px;
+}
+
+.eyebrow {
+	margin: 0 0 10px;
+	font-size: 0.82rem;
+	font-weight: 600;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--accent-strong);
+}
+
+.headerLeft h1 {
+	margin: 0;
+	font-family: var(--font-heading);
+	font-size: clamp(2.2rem, 4vw, 3.35rem);
+	line-height: 0.95;
+	letter-spacing: -0.06em;
+}
+
+.subtitle {
+	margin: 14px 0 0;
+	max-width: 620px;
+	font-size: 1rem;
+	line-height: 1.6;
+	color: var(--text-secondary);
+}
+
+.actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: 12px;
+}
+
+.ghostButton,
+.primaryButton {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	padding: 0.9rem 1.2rem;
+	border-radius: 16px;
+	font-weight: 600;
+}
+
+.ghostButton {
+	border: 1px solid var(--border);
+	background: rgba(255, 255, 255, 0.04);
+	color: var(--text-primary);
+}
+
+.ghostButton svg {
+	width: 16px;
+	height: 16px;
+	color: #ffd28f;
+}
+
+.primaryButton {
+	border: 1px solid transparent;
+	background: linear-gradient(
+		135deg,
+		rgba(79, 140, 255, 0.18),
+		rgba(103, 179, 255, 0.18)
+	);
+	color: #b9d6ff;
+}
+
+@media (max-width: 920px) {
+	.header {
+		flex-direction: column;
+	}
+
+	.actions {
+		justify-content: flex-start;
+	}
+}

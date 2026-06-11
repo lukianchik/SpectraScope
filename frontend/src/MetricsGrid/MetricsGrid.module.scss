@@ -1,0 +1,160 @@
+.metricsGrid {
+	display: grid;
+	grid-template-columns: repeat(5, minmax(0, 1fr));
+	gap: 18px;
+
+	@media (max-width: 1320px) {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+
+	@media (max-width: 860px) {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	@media (max-width: 620px) {
+		grid-template-columns: 1fr;
+	}
+}
+
+.metricCard {
+	position: relative;
+	display: flex;
+	align-items: flex-start;
+	gap: 16px;
+	min-height: 132px;
+	padding: 22px;
+	border-radius: 24px;
+	border: 1px solid var(--border);
+	background:
+		linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 40%),
+		var(--surface);
+	box-shadow: var(--shadow-md);
+	overflow: hidden;
+}
+
+.hasGauge {
+	padding-right: 108px;
+}
+
+.metricCard::after {
+	content: '';
+	position: absolute;
+	inset: auto -10% -60% auto;
+	width: 120px;
+	height: 120px;
+	background: radial-gradient(circle, rgba(255, 255, 255, 0.14), transparent 72%);
+	pointer-events: none;
+}
+
+.metricIcon {
+	display: grid;
+	place-items: center;
+	flex-shrink: 0;
+	width: 46px;
+	height: 46px;
+	border-radius: 16px;
+	font-size: 1.25rem;
+	color: white;
+	background: rgba(255, 255, 255, 0.1);
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+
+	svg {
+		width: 20px;
+		height: 20px;
+	}
+}
+
+.metricBody {
+	min-width: 0;
+}
+
+.metricLabel {
+	margin: 0 0 8px;
+	font-size: 0.92rem;
+	color: var(--text-secondary);
+}
+
+.metricValueRow {
+	display: flex;
+	align-items: baseline;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.metricValue {
+	font-family: var(--font-heading);
+	font-size: clamp(1.7rem, 2vw, 2rem);
+	font-weight: 600;
+	letter-spacing: -0.04em;
+	color: var(--text-primary);
+}
+
+.metricDelta {
+	font-size: 0.9rem;
+	font-weight: 600;
+}
+
+.metricCaption {
+	margin: 8px 0 0;
+	font-size: 0.86rem;
+	color: var(--text-tertiary);
+}
+
+.gauge {
+	--progress: 0%;
+	position: absolute;
+	right: 20px;
+	top: 20px;
+	display: grid;
+	place-items: center;
+	width: 72px;
+	height: 72px;
+	border-radius: 50%;
+	background:
+		radial-gradient(circle at center, rgba(9, 16, 30, 0.95) 58%, transparent 59%),
+		conic-gradient(var(--accent-strong) var(--progress), var(--ring-track) 0);
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.gaugeInner {
+	display: grid;
+	place-items: center;
+	width: 56px;
+	height: 56px;
+	border-radius: 50%;
+	background: rgba(7, 14, 26, 0.98);
+	color: var(--text-primary);
+	font-family: var(--font-heading);
+	font-size: 1rem;
+	font-weight: 700;
+}
+
+.accent .metricIcon,
+.accent .metricDelta {
+	background-color: rgba(79, 140, 255, 0.16);
+	color: #90c0ff;
+}
+
+.success .metricIcon,
+.success .metricDelta {
+	background-color: rgba(76, 211, 138, 0.16);
+	color: #83eab1;
+}
+
+.warning .metricIcon,
+.warning .metricDelta {
+	background-color: rgba(255, 179, 71, 0.16);
+	color: #ffd28f;
+}
+
+.critical .metricIcon,
+.critical .metricDelta {
+	background-color: rgba(255, 98, 98, 0.18);
+	color: #ff9c9c;
+}
+
+.neutral .metricIcon,
+.neutral .metricDelta {
+	background-color: rgba(126, 160, 216, 0.18);
+	color: #b4cfff;
+}
