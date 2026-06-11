@@ -1,0 +1,26 @@
+:root {
+	--bg: #06101d;
+	--bg-glow: rgba(48, 118, 255, 0.28);
+	--surface: rgba(12, 23, 40, 0.92);
+	--surface-strong: rgba(15, 29, 49, 0.98);
+	--surface-soft: rgba(12, 20, 35, 0.72);
+	--surface-hover: rgba(20, 35, 58, 0.98);
+	--border: rgba(120, 152, 205, 0.16);
+	--border-strong: rgba(120, 152, 205, 0.28);
+	--text-primary: #f5f9ff;
+	--text-secondary: #9fb0cc;
+	--text-tertiary: #6e7d99;
+	--accent: #4f8cff;
+	--accent-strong: #8ec5ff;
+	--success: #4cd38a;
+	--warning: #ffb347;
+	--danger: #ff6262;
+	--info: #7ea0d8;
+	--ring-track: rgba(255, 255, 255, 0.08);
+	--shadow-lg: 0 26px 70px rgba(2, 8, 20, 0.48);
+	--shadow-md: 0 18px 40px rgba(4, 9, 20, 0.28);
+	--font-body: 'Segoe UI Variable Text', 'Inter', 'Segoe UI', sans-serif;
+	--font-heading:
+		'Aptos Display', 'Segoe UI Variable Display', 'Trebuchet MS', sans-serif;
+	--font-mono: 'JetBrains Mono', 'Cascadia Code', monospace;
+}

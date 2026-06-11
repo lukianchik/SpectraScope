@@ -7,3 +7,4 @@ venv/
 .mypy_cache/
 .ruff_cache/
 postgres_data/
+node_modules/
