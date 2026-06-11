@@ -1,0 +1,4 @@
+# Dummy legacy config placeholder.
+# Contains no passwords, tokens, keys, or real environment data.
+app_name=spectrascope-lab-demo
+environment=local-only
