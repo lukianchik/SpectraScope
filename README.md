@@ -13,6 +13,7 @@ This project is intended only for assets you own or are explicitly authorized to
 - Scanner adapters: `subfinder`, `httpx`, `nuclei`, optional `nmap`
 
 By default `ENABLE_REAL_SCANNERS=false`, so scanner adapters return mock results and do not execute external scanner binaries.
+The mock pipeline returns dashboard-ready preview data for `example.com`: 24 assets, 15 findings, top risks, and a generated report summary.
 
 ## Run
 

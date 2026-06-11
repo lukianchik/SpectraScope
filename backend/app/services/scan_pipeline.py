@@ -45,7 +45,7 @@ def run_scan_pipeline(scan_id: str, db: Session, settings: Settings | None = Non
         logger.info("Starting safe scan pipeline for target=%s scan_id=%s", target, scan_id)
 
         subdomains = SubfinderAdapter(settings).discover(target)
-        hostnames = sorted({result.hostname for result in subdomains})
+        hostnames = list(dict.fromkeys(result.hostname for result in subdomains))
 
         alive_results = HttpxAdapter(settings).probe(hostnames)
         assets_by_hostname: dict[str, Asset] = {}
@@ -127,6 +127,28 @@ def run_scan_pipeline(scan_id: str, db: Session, settings: Settings | None = Non
 
 
 def build_risk_report(scan: Scan, findings: list[Finding], asset_count: int) -> RiskReport:
+    if _is_site_preview_report(findings):
+        return RiskReport(
+            scan_id=scan.id,
+            summary=(
+                f"SpectraScope scanned {scan.target} and detected 15 security findings across 24 live assets. "
+                "The most significant risk is an exposed admin panel that could allow unauthorized access. "
+                "Several assets are missing basic security headers and should be hardened."
+            ),
+            top_risks=[
+                {"risk": "Exposed Admin Panel", "assets": 1, "severity": "high"},
+                {"risk": "Missing Security Headers", "assets": 8, "severity": "medium"},
+                {"risk": "Directory Listing Enabled", "assets": 2, "severity": "medium"},
+                {"risk": "Outdated Server Version", "assets": 3, "severity": "medium"},
+                {"risk": "TLS Certificate Expiring Soon", "assets": 2, "severity": "low"},
+            ],
+            recommendations=[
+                f"Secure or remove the exposed admin panel on admin.{scan.target}.",
+                "Implement security headers (CSP, HSTS, X-Frame-Options) across all web assets.",
+                "Update outdated software and re-scan to verify remediation.",
+            ],
+        )
+
     severity_counts = Counter(finding.severity for finding in findings)
     top_findings = sorted(findings, key=lambda item: SEVERITY_ORDER.get(item.severity, 0), reverse=True)[:5]
     top_risks = [
@@ -169,3 +191,7 @@ def _hostname_from_finding_host(value: str) -> str:
 def _normalize_severity(value: str) -> str:
     normalized = value.lower()
     return normalized if normalized in SEVERITY_ORDER else "info"
+
+
+def _is_site_preview_report(findings: list[Finding]) -> bool:
+    return bool(findings) and all((finding.raw_json or {}).get("site_preview") is True for finding in findings)
