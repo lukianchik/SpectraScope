@@ -18,7 +18,14 @@ services:
       # - dvwa
       # - webgoat
     networks:
-      - lab
+      lab:
+        aliases:
+          - admin.lab.local
+          - legacy.lab.local
+          - files.lab.local
+          - juice.lab.local
+          - dvwa.lab.local
+          - webgoat.lab.local
 
   juice-shop:
     image: bkimminich/juice-shop:latest

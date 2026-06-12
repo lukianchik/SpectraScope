@@ -7,6 +7,7 @@ This lab is a local-only Docker Compose environment for testing the SpectraScope
 This lab contains intentionally vulnerable or deliberately suspicious demo services. Do not publish it to the internet, do not bind it to a public interface, and do not use it against third-party systems. It is intended only for local SpectraScope testing on machines you control.
 
 The compose file exposes only the reverse proxy on localhost ports. Individual services are reachable only through the Docker network.
+Inside Docker-based CI, the reverse proxy is also reachable by network aliases such as `admin.lab.local`, `legacy.lab.local`, `files.lab.local`, and `juice.lab.local`.
 
 ## Services
 
@@ -124,3 +125,14 @@ Stable findings expected from this lab:
 - Legacy Service Demo
 - Directory Listing Demo
 - missing security headers, if your scanner configuration checks for them
+
+## CI Demo Loop
+
+The repository includes a GitHub Actions workflow at [`.github/workflows/lab-mode.yml`](../.github/workflows/lab-mode.yml) for the baseline demo loop. It:
+
+- starts the main backend stack and the lab stack;
+- connects backend and worker containers to the lab network;
+- waits for `http://127.0.0.1:8000/health/ready`;
+- launches scans for `admin.lab.local:8088`, `legacy.lab.local:8088`, and `files.lab.local:8088`;
+- verifies the expected finding and report for each target;
+- writes a GitHub Actions Summary and uploads `artifacts/lab-mode-results.json`.

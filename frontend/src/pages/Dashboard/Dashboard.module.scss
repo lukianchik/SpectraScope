@@ -104,6 +104,11 @@
 	font-weight: 700;
 }
 
+.idleStatus {
+	background: rgba(126, 160, 216, 0.16);
+	color: #bfd3ff;
+}
+
 .steps {
 	display: grid;
 	grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -134,6 +139,15 @@
 	background: linear-gradient(135deg, rgba(76, 211, 138, 0.95), rgba(108, 224, 192, 0.82));
 	color: #02110d;
 	font-weight: 800;
+}
+
+.stepDone {
+	background: linear-gradient(135deg, rgba(76, 211, 138, 0.95), rgba(108, 224, 192, 0.82));
+}
+
+.stepPending {
+	background: rgba(126, 160, 216, 0.16);
+	color: #bfd3ff;
 }
 
 .stepLine {
@@ -383,6 +397,7 @@
 	color: #9cebbd;
 }
 
+.created,
 .running {
 	background: rgba(79, 140, 255, 0.16);
 	color: #b5d4ff;

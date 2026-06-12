@@ -10,7 +10,7 @@ Severity = Literal["critical", "high", "medium", "low", "info"]
 
 
 class ScanStartRequest(BaseModel):
-    target: str = Field(min_length=3, max_length=255, examples=["example.com"])
+    target: str = Field(min_length=3, max_length=255, examples=["example.com", "admin.lab.local:8088"])
     scan_profile: str = Field(default="safe", max_length=64)
     confirm_authorized: bool = Field(
         default=False,

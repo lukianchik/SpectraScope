@@ -27,7 +27,21 @@ def normalize_target(raw_target: str) -> str:
     if not DOMAIN_RE.fullmatch(hostname):
         raise TargetValidationError("Target must be a valid domain name")
 
-    return hostname
+    try:
+        port = parsed.port
+    except ValueError as exc:
+        raise TargetValidationError("Target port must be a valid integer between 1 and 65535") from exc
+
+    if port is not None and not 1 <= port <= 65535:
+        raise TargetValidationError("Target port must be between 1 and 65535")
+
+    return f"{hostname}:{port}" if port is not None else hostname
+
+
+def split_target_host_port(target: str) -> tuple[str, int | None]:
+    parsed = urlparse(target if "://" in target else f"//{target}")
+    hostname = (parsed.hostname or target).rstrip(".")
+    return hostname, parsed.port
 
 
 def _is_ip_address(value: str) -> bool:

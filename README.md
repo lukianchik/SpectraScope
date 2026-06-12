@@ -1,6 +1,6 @@
 # SpectraScope
 
-SpectraScope is an MVP platform skeleton for applied cyber intelligence and external attack surface analysis. A user submits a domain, the backend starts a safe discovery pipeline, stores assets and baseline findings in PostgreSQL, and exposes the results through an API.
+SpectraScope is an MVP platform skeleton for applied cyber intelligence and external attack surface analysis. A user submits a domain or an approved lab target, the backend starts a safe discovery pipeline, stores assets and baseline findings in PostgreSQL, and exposes the results through an API.
 
 This project is intended only for assets you own or are explicitly authorized to assess. It is not an exploitation framework or an automated pentest tool.
 
@@ -13,7 +13,7 @@ This project is intended only for assets you own or are explicitly authorized to
 - Scanner adapters: `subfinder`, `httpx`, `nuclei`, optional `nmap`
 
 By default `ENABLE_REAL_SCANNERS=false`, so scanner adapters return mock results and do not execute external scanner binaries.
-The mock pipeline returns dashboard-ready preview data for `example.com`: 24 assets, 15 findings, top risks, and a generated report summary.
+The mock pipeline returns dashboard-ready preview data for public-domain style scans such as `example.com`: 24 assets, 15 findings, top risks, and a generated report summary.
 
 ## Run
 
@@ -52,6 +52,14 @@ curl http://localhost:8000/api/scans/<scan_id>/report
 curl http://localhost:8000/api/scans/<scan_id>/audit
 ```
 
+Start a LAB_MODE scan:
+
+```bash
+curl -X POST http://localhost:8000/api/scans/start \
+  -H "Content-Type: application/json" \
+  -d '{"target":"admin.lab.local:8088","scan_profile":"lab","confirm_authorized":true}'
+```
+
 ## Local Development Without Docker
 
 For fast backend iteration, run the API with SQLite and eager Celery tasks:
@@ -77,9 +85,11 @@ With `CELERY_TASK_ALWAYS_EAGER=true`, `POST /api/scans/start` runs the mock pipe
 - Audit log table for scan launch authorization decisions.
 - Celery worker task `run_scan(scan_id)` with a safe scanner pipeline.
 - Target validation that accepts domains and rejects direct IP targets by default.
-- Target policy requiring explicit authorization confirmation and optional `ALLOWED_TARGET_DOMAINS` allowlist.
+- Target validation that preserves `host:port` for approved local lab targets.
+- Target policy requiring explicit authorization confirmation and supporting `ALLOWED_TARGET_DOMAINS` for normal mode plus `ALLOWED_LAB_TARGETS` for `LAB_MODE`.
 - Scanner adapters with normalized Python objects and safe subprocess execution: no `shell=True`, timeout handling, binary detection, and error propagation.
 - Development mock mode for checking the whole flow without installing scanner tools.
+- Safe `LAB_MODE` using plain HTTP `GET` requests against allowlisted demo targets without real scanner binaries.
 - Docker Compose services for backend, worker, Postgres, and Redis.
 
 ## Scanner Safety
@@ -99,6 +109,30 @@ ALLOWED_TARGET_DOMAINS=example.com,example.org
 ```
 
 Subdomains of allowlisted domains are accepted. Direct IP targets are still rejected by default.
+
+## LAB_MODE
+
+`LAB_MODE=true` switches the backend into a safe demo-only path for `lab/` services. In this mode:
+
+- only targets from `ALLOWED_LAB_TARGETS` are accepted;
+- targets may use `host:port` such as `admin.lab.local:8088`;
+- the pipeline performs only safe HTTP `GET` requests;
+- findings are generated from deterministic demo markers rather than external scanner binaries.
+
+Example env:
+
+```env
+LAB_MODE=true
+ENABLE_REAL_SCANNERS=false
+ENABLE_NMAP=false
+ALLOWED_LAB_TARGETS=admin.lab.local:8088,legacy.lab.local:8088,files.lab.local:8088
+```
+
+Expected demo findings:
+
+- `admin.lab.local:8088` -> `Exposed Admin Panel Demo`
+- `legacy.lab.local:8088` -> `Legacy Service Demo`
+- `files.lab.local:8088` -> `Directory Listing Demo`
 
 ## Observability
 
@@ -122,6 +156,8 @@ docker compose up --build
 ```
 
 See `lab/README.md` before running it. The lab contains intentionally vulnerable or suspicious demo services and must not be exposed to the internet.
+
+The repository also contains a CI workflow for this demo loop in [`.github/workflows/lab-mode.yml`](./.github/workflows/lab-mode.yml). It starts the backend stack and lab stack, waits for `/health/ready`, launches demo scans, verifies expected findings, and uploads a JSON artifact with the results.
 
 ## Next Steps
 

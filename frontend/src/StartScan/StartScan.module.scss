@@ -43,6 +43,23 @@
 	white-space: nowrap;
 }
 
+.presetRow {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin-bottom: 18px;
+}
+
+.presetButton {
+	padding: 0.55rem 0.8rem;
+	border-radius: 999px;
+	border: 1px solid rgba(79, 140, 255, 0.18);
+	background: rgba(255, 255, 255, 0.04);
+	color: #bfd9ff;
+	font-size: 0.82rem;
+	font-weight: 600;
+}
+
 .form {
 	display: grid;
 	grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -79,6 +96,11 @@
 	background: rgba(8, 18, 34, 0.8);
 }
 
+.fieldError {
+	font-size: 0.8rem;
+	color: #ffb1b1;
+}
+
 .checkbox {
 	grid-column: 1 / -1;
 	display: flex;
@@ -93,6 +115,13 @@
 	width: 18px;
 	height: 18px;
 	accent-color: var(--accent);
+}
+
+.formError {
+	grid-column: 1 / -1;
+	margin: 0;
+	font-size: 0.88rem;
+	color: #ffb1b1;
 }
 
 .actions {
@@ -121,6 +150,13 @@
 	background: rgba(255, 255, 255, 0.03);
 	color: var(--text-primary);
 	border-color: var(--border);
+}
+
+.primaryButton:disabled,
+.secondaryButton:disabled {
+	opacity: 0.55;
+	cursor: not-allowed;
+	box-shadow: none;
 }
 
 @media (max-width: 1040px) {

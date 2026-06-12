@@ -1,3 +1,11 @@
+import type {
+	AssetResponse,
+	FindingResponse,
+	RiskReportResponse,
+	ScanResponse,
+	Severity,
+} from '../shared/api/scans';
+
 export type MetricTone = 'accent' | 'success' | 'warning' | 'critical' | 'neutral';
 export type SeverityTone = 'critical' | 'high' | 'medium' | 'low' | 'info';
 
@@ -52,145 +60,195 @@ export interface ScanStep {
 	completed: boolean;
 }
 
-export const metrics: Metric[] = [
-	{
-		label: 'Total Assets',
-		value: '128',
-		delta: '+12%',
-		caption: 'vs last scan',
-		tone: 'accent',
-	},
-	{
-		label: 'Live Hosts',
-		value: '96',
-		delta: '+8%',
-		caption: 'reachable now',
-		tone: 'success',
-	},
-	{
-		label: 'Findings',
-		value: '243',
-		delta: '+18%',
-		caption: 'open issues',
-		tone: 'warning',
-	},
-	{
-		label: 'Critical Findings',
-		value: '12',
-		delta: '+33%',
-		caption: 'needs triage',
-		tone: 'critical',
-	},
-	{
-		label: 'Risk Score',
-		value: '78 / 100',
-		delta: 'High',
-		caption: 'attack surface posture',
-		tone: 'neutral',
-		progress: 78,
-	},
+export const LAB_TARGET_PRESETS = [
+	'admin.lab.local:8088',
+	'legacy.lab.local:8088',
+	'files.lab.local:8088',
 ];
 
-export const riskBreakdown: RiskBreakdownItem[] = [
-	{ label: 'Critical', value: 12, percent: 5, tone: 'critical' },
-	{ label: 'High', value: 45, percent: 18, tone: 'high' },
-	{ label: 'Medium', value: 83, percent: 34, tone: 'medium' },
-	{ label: 'Low', value: 67, percent: 28, tone: 'low' },
-	{ label: 'Info', value: 36, percent: 15, tone: 'info' },
-];
+const SEVERITY_WEIGHTS: Record<Severity, number> = {
+	critical: 5,
+	high: 4,
+	medium: 3,
+	low: 2,
+	info: 1,
+};
 
-export const trendSeries: TrendPoint[] = [
-	{ label: 'May 12', value: 48 },
-	{ label: 'May 19', value: 104 },
-	{ label: 'May 26', value: 146 },
-	{ label: 'Jun 2', value: 168 },
-	{ label: 'Jun 9', value: 214 },
-	{ label: 'Jun 16', value: 243 },
-];
+export function buildMetrics(
+	assets: AssetResponse[] = [],
+	findings: FindingResponse[] = [],
+	report: RiskReportResponse | null = null,
+): Metric[] {
+	const liveHosts = assets.filter((asset) => asset.is_alive).length;
+	const criticalFindings = findings.filter((finding) => finding.severity === 'critical').length;
+	const highRiskFindings = findings.filter((finding) =>
+		['critical', 'high'].includes(finding.severity),
+	).length;
+	const technologies = new Set(
+		assets.flatMap((asset) => asset.technologies ?? []).map((technology) => technology.toLowerCase()),
+	).size;
+	const riskScore = getRiskScore(findings);
 
-export const riskyAssets: RiskyAsset[] = [
-	{ name: 'admin.example.com', ip: '203.0.113.10', score: 92, status: 'Critical' },
-	{ name: 'api.example.com', ip: '203.0.113.20', score: 88, status: 'Monitored' },
-	{ name: 'dev.example.com', ip: '203.0.113.30', score: 75, status: 'Watchlist' },
-	{ name: 'shop.example.com', ip: '203.0.113.40', score: 72, status: 'Monitored' },
-	{ name: 'vpn.example.com', ip: '203.0.113.50', score: 67, status: 'Watchlist' },
-];
+	return [
+		{
+			label: 'Total Assets',
+			value: String(assets.length),
+			delta: `${technologies} techs`,
+			caption: 'discovered for current scan',
+			tone: 'accent',
+		},
+		{
+			label: 'Live Hosts',
+			value: String(liveHosts),
+			delta: `${assets.length - liveHosts} offline`,
+			caption: 'reachable right now',
+			tone: 'success',
+		},
+		{
+			label: 'Findings',
+			value: String(findings.length),
+			delta: `${highRiskFindings} high+`,
+			caption: 'observations from scanner pipeline',
+			tone: 'warning',
+		},
+		{
+			label: 'Critical Findings',
+			value: String(criticalFindings),
+			delta: criticalFindings > 0 ? 'Needs triage' : 'Clear',
+			caption: 'highest severity issues',
+			tone: 'critical',
+		},
+		{
+			label: 'Risk Score',
+			value: `${riskScore} / 100`,
+			delta: classifyRiskLabel(riskScore),
+			caption: report ? 'summarized from current report' : 'derived from findings',
+			tone: 'neutral',
+			progress: riskScore,
+		},
+	];
+}
 
-export const recentScans: ScanRecord[] = [
-	{
-		target: 'example.com',
-		profile: 'Full Scan',
-		status: 'Completed',
-		assets: 128,
-		findings: 243,
-		riskScore: 78,
-		finishedAt: 'Jun 17, 14:32',
-	},
-	{
-		target: 'portal.example.com',
-		profile: 'Quick Scan',
-		status: 'Running',
-		assets: 46,
-		findings: 19,
-		riskScore: 55,
-		finishedAt: 'Jun 17, 12:08',
-	},
-	{
-		target: 'acme.io',
-		profile: 'Full Scan',
-		status: 'Completed',
-		assets: 98,
-		findings: 188,
-		riskScore: 65,
-		finishedAt: 'Jun 15, 16:44',
-	},
-	{
-		target: 'staging.example.com',
-		profile: 'Discovery',
-		status: 'Failed',
-		assets: 0,
-		findings: 0,
-		riskScore: 0,
-		finishedAt: 'Jun 15, 09:21',
-	},
-];
+export function buildScanSteps(
+	scan: ScanResponse | null,
+	assets: AssetResponse[] = [],
+	findings: FindingResponse[] = [],
+	report: RiskReportResponse | null = null,
+): ScanStep[] {
+	const scanStarted = scan !== null;
+	const scanFinished = scan?.status === 'completed' || scan?.status === 'failed';
+	const hasAssets = assets.length > 0 || scanFinished;
+	const hasFindings = findings.length > 0 || scanFinished;
 
-export const topFindings: FindingRecord[] = [
-	{
-		severity: 'critical',
-		title: 'CVE-2024-48788',
-		description: 'Apache Struts RCE vulnerability',
-		count: 3,
-	},
-	{
-		severity: 'critical',
-		title: 'CVE-2023-3519',
-		description: 'Citrix NetScaler unauthenticated RCE',
-		count: 2,
-	},
-	{
-		severity: 'high',
-		title: 'Directory listing enabled',
-		description: 'Public file indexes expose internal assets',
-		count: 12,
-	},
-	{
-		severity: 'medium',
-		title: 'Missing security headers',
-		description: 'CSP, HSTS, and X-Frame-Options absent',
-		count: 18,
-	},
-];
+	return [
+		{
+			title: 'Target',
+			subtitle: scan?.target ?? 'Waiting for submission',
+			completed: scanStarted,
+		},
+		{
+			title: 'Live Hosts',
+			subtitle: scanStarted ? `${assets.length} discovered` : 'Pending',
+			completed: hasAssets,
+		},
+		{
+			title: 'Findings',
+			subtitle: scanStarted ? `${findings.length} flagged` : 'Pending',
+			completed: hasFindings,
+		},
+		{
+			title: 'Report',
+			subtitle: report ? 'Generated' : scan?.status === 'failed' ? 'Unavailable' : 'Pending',
+			completed: report !== null,
+		},
+	];
+}
 
-export const scanSteps: ScanStep[] = [
-	{ title: 'Subdomains', subtitle: '120 found', completed: true },
-	{ title: 'Live Hosts', subtitle: '24 live', completed: true },
-	{ title: 'Findings', subtitle: '15 flagged', completed: true },
-	{ title: 'Report', subtitle: 'Generated', completed: true },
-];
+export function getRiskScore(findings: FindingResponse[] = []) {
+	const score = findings.reduce((total, finding) => total + SEVERITY_WEIGHTS[finding.severity], 0);
+	return Math.min(score, 100);
+}
 
-export const recommendations = [
-	'Secure or remove the exposed admin panel on admin.example.com.',
-	'Roll out baseline headers and TLS hardening across internet-facing hosts.',
-	'Patch legacy services, then re-scan high-risk assets to validate remediation.',
-];
+export function formatScanStatus(status: ScanResponse['status'] | null) {
+	switch (status) {
+		case 'created':
+			return 'Created';
+		case 'running':
+			return 'Running';
+		case 'completed':
+			return 'Completed';
+		case 'failed':
+			return 'Failed';
+		default:
+			return 'Idle';
+	}
+}
+
+export function formatStatusHeadline(scan: ScanResponse | null) {
+	switch (scan?.status) {
+		case 'created':
+			return 'Scan queued for execution';
+		case 'running':
+			return 'Scan is currently running';
+		case 'completed':
+			return 'Scan completed successfully';
+		case 'failed':
+			return 'Scan failed';
+		default:
+			return 'Start a scan to populate the dashboard';
+	}
+}
+
+export function formatStatusMeta(
+	scan: ScanResponse | null,
+	assetsCount: number,
+	findingsCount: number,
+	report: RiskReportResponse | null = null,
+) {
+	if (!scan) {
+		return 'Pick a lab preset or enter a target, then confirm authorization to begin.';
+	}
+
+	if (scan.status === 'failed') {
+		return scan.error_message ?? `Scan for ${scan.target} failed before the report stage.`;
+	}
+
+	const summaryParts = [`Target ${scan.target}`, `${assetsCount} assets`, `${findingsCount} findings`];
+
+	if (report) {
+		summaryParts.push(`${report.recommendations.length} recommendations`);
+	}
+
+	if (scan.finished_at) {
+		summaryParts.push(`Finished ${formatUtcTimestamp(scan.finished_at)}`);
+	} else if (scan.started_at) {
+		summaryParts.push(`Started ${formatUtcTimestamp(scan.started_at)}`);
+	} else {
+		summaryParts.push(`Queued ${formatUtcTimestamp(scan.created_at)}`);
+	}
+
+	return summaryParts.join(' • ');
+}
+
+export function formatUtcTimestamp(value: string) {
+	return new Intl.DateTimeFormat(undefined, {
+		dateStyle: 'medium',
+		timeStyle: 'short',
+	}).format(new Date(value));
+}
+
+function classifyRiskLabel(score: number) {
+	if (score >= 75) {
+		return 'High';
+	}
+
+	if (score >= 35) {
+		return 'Medium';
+	}
+
+	if (score > 0) {
+		return 'Low';
+	}
+
+	return 'Minimal';
+}

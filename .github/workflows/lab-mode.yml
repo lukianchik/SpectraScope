@@ -1,0 +1,57 @@
+name: LAB_MODE Demo Loop
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lab-mode:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      LAB_MODE: "true"
+      ENABLE_REAL_SCANNERS: "false"
+      ENABLE_NMAP: "false"
+      CELERY_TASK_ALWAYS_EAGER: "false"
+      ALLOWED_LAB_TARGETS: admin.lab.local:8088,legacy.lab.local:8088,files.lab.local:8088
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Start lab stack
+        run: docker compose --project-name spectrascope-lab -f lab/docker-compose.yml up -d --build
+
+      - name: Start backend stack
+        run: docker compose --project-name spectrascope up -d --build postgres redis backend worker
+
+      - name: Attach backend and worker to lab network
+        run: |
+          docker network connect spectrascope-lab_lab "$(docker compose --project-name spectrascope ps -q backend)"
+          docker network connect spectrascope-lab_lab "$(docker compose --project-name spectrascope ps -q worker)"
+
+      - name: Run LAB_MODE verification
+        run: python3 ops/lab_mode_ci.py
+
+      - name: Upload LAB_MODE artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lab-mode-results
+          path: artifacts/lab-mode-results.json
+          if-no-files-found: error
+
+      - name: Dump docker logs on failure
+        if: failure()
+        run: |
+          docker compose --project-name spectrascope logs --no-color backend worker postgres redis
+          docker compose --project-name spectrascope-lab -f lab/docker-compose.yml logs --no-color
+
+      - name: Tear down stacks
+        if: always()
+        run: |
+          docker compose --project-name spectrascope down -v
+          docker compose --project-name spectrascope-lab -f lab/docker-compose.yml down -v

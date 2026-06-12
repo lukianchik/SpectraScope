@@ -251,7 +251,16 @@ nuclei -l urls.txt -jsonl -t ./lab/nuclei-templates
 ## Current Gaps To Fix
 
 - `NUCLEI_TEMPLATES_PATH` exists in `.env.example`, but `Settings` and `NucleiAdapter` do not use it yet.
-- `normalize_target()` returns only a hostname and drops the port. That is fine for public domain scans, but it means API scans for `admin.lab.local:8088` will not preserve `:8088`.
 - `DOMAIN_RE` rejects `localhost`; local lab testing should use `*.lab.local` hosts entries or a dedicated local-target mode.
 - `httpx` and `nuclei` currently run one subprocess per input. Batch mode will be faster and easier to limit.
 - Real scanner binaries are not installed by `backend/requirements.txt`; they must be installed in the Docker image or documented for local backend setup.
+
+## LAB_MODE Notes
+
+- `normalize_target()` now preserves `host:port` for valid targets such as `admin.lab.local:8088`.
+- `LAB_MODE=true` uses `ALLOWED_LAB_TARGETS` instead of the public-domain allowlist.
+- In `LAB_MODE`, the backend performs only safe HTTP `GET` requests against allowlisted demo targets and does not invoke `subfinder`, `httpx`, `nuclei`, or `nmap`.
+- The demo findings currently expected by CI are:
+  - `Exposed Admin Panel Demo`
+  - `Legacy Service Demo`
+  - `Directory Listing Demo`
