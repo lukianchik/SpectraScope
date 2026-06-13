@@ -10,89 +10,100 @@ tasks/ikarpenko_report.md
 
 Формат свободный, но желательно обновлять отчет после каждого заметного шага: что сделано, что проверено, что осталось, где есть блокеры.
 
-## LAB_MODE для локального demo-стенда
+## Контекст после merge в main
 
-Нужно реализовать безопасный режим `LAB_MODE=true`, в котором SpectraScope умеет сканировать только локальные demo-сервисы из `lab/`.
+Ahorsov сейчас берет активную работу по real scanner spike и dashboard detail. Чтобы не конфликтовать с ним, ikarpenko получает отдельный backend/product-intelligence блок, который можно начать позже.
+
+Цель блока: подготовить слой нормализации, приоритизации и будущего AI summary, не меняя scanner runtime, который будет крутить ahorsov.
+
+## Основной фокус
+
+Работать в backend data/contract/risk слое, документации и тестах.
+
+Не трогать:
+
+- frontend layout;
+- scanner Docker/runtime;
+- adapters `subfinder/httpx/nuclei`, если это пересекается с PR ahorsov;
+- GitHub Actions frontend/lab jobs.
+
+## Задача 1. Risk scoring contract
+
+Нужно уйти от простого подсчета severity к первому контекстному risk score.
 
 ### Что сделать
 
-- Добавить настройку `LAB_MODE`.
-- Разрешить в этом режиме только заранее известные lab targets.
-- Поддержать allowlist именно в формате `host:port`, потому что текущий `normalize_target()` отбрасывает порт.
-- Не смешивать `LAB_MODE` с обычной domain validation.
-- Выполнять только безопасные HTTP `GET`-запросы.
-- Не выполнять POST/PUT/PATCH/DELETE и любые state-changing запросы.
-- Находить demo-маркеры:
-  - `X-Spectra-Finding: exposed-admin-panel`
-  - `X-Spectra-Finding: legacy-service`
-  - `backup.zip`
-  - `config.old`
-- Сохранять найденное как `Asset`, `Finding`, `RiskReport`.
-- Не ослаблять обычный режим, когда `LAB_MODE=false`.
+- Описать backend-функцию или service для расчета risk score.
+- Минимальные факторы:
+  - finding severity;
+  - asset is alive;
+  - service looks sensitive: `admin`, `auth`, `login`, `vpn`, `sso`, `backup`, `staging`;
+  - finding source;
+  - number of findings per asset.
+- Score должен быть объяснимым: почему asset/finding получил такой приоритет.
+- Не менять scanner adapters.
 
-### Рекомендуемая реализация
+### Acceptance criteria
 
-Сделать отдельный безопасный adapter:
+- Есть unit tests на scoring.
+- Score стабилен и детерминирован.
+- В коде есть понятный mapper/reason list, который потом можно показать в UI/AI summary.
 
-```text
-LabScannerAdapter
-```
+## Задача 2. AI summary input contract
 
-Он должен:
+Перед подключением нейросети нужно подготовить структурированный input, чтобы AI не выдумывал факты.
 
-- принимать только allowlisted lab target;
-- строить URL только из разрешенных `host:port`;
-- выполнять только HTTP `GET`;
-- читать headers и body;
-- возвращать нормализованные результаты для pipeline;
-- не использовать real scanner binaries;
-- не использовать `shell=True`.
+### Что сделать
 
-Пример allowlist:
+- Спроектировать JSON payload для будущего AI summary.
+- Payload должен включать только evidence из БД:
+  - scan target;
+  - assets;
+  - services/technologies;
+  - findings;
+  - top risks;
+  - recommendations;
+  - risk reasons.
+- Добавить функцию, которая строит этот payload из scan data.
+- Пока не вызывать OpenAI/API и не добавлять ключи.
 
-```text
-admin.lab.local:8088
-legacy.lab.local:8088
-files.lab.local:8088
-juice.lab.local:8088
-```
+### Acceptance criteria
 
-### Ожидаемый результат
+- Есть unit test на shape payload.
+- Payload не содержит огромных raw dumps.
+- Каждое утверждение в payload связано с asset/finding/evidence.
+- Код можно будет позже использовать для реального AI summary.
 
-- Scan `admin.lab.local:8088` находит `Exposed Admin Panel Demo`.
-- Scan `legacy.lab.local:8088` находит `Legacy Service Demo`.
-- Scan `files.lab.local:8088` находит `Directory Listing Demo`.
-- Результаты видны через API.
-- Неизвестные или внешние targets не разрешаются в `LAB_MODE`, если они не входят в lab allowlist.
-- Обычный безопасный режим продолжает работать как раньше при `LAB_MODE=false`.
+## Задача 3. Report model improvements
 
-### Важное про Docker/network
+Текущий `RiskReport` уже есть, но для MVP-приоритизации нужно сделать его ближе к defensive summary.
 
-Проверить, что backend и worker могут достучаться до lab-сервисов именно из контейнера.
+### Что сделать
 
-`localhost` внутри backend container означает сам backend container, а не host machine. Поэтому нужно либо:
+- Подготовить структуру `top_risks`, чтобы она была стабильной:
+  - title/risk;
+  - severity;
+  - affected assets;
+  - reason;
+  - recommended action.
+- Сохранить backward compatibility с текущим frontend.
+- Добавить tests на build report для:
+  - empty findings;
+  - low/info findings only;
+  - high finding на sensitive asset;
+  - LAB_MODE finding.
 
-- подключить backend/worker и lab к совместимой Docker network;
-- использовать service aliases;
-- или явно задокументировать локальный режим запуска без Docker.
+### Acceptance criteria
 
-## API-контракт для frontend
+- Report summary объясняет, что защищать первым.
+- `top_risks` не является произвольным набором dict без ожидаемых ключей.
+- Existing frontend не ломается.
 
-### Общие требования
+## Задача 4. API error envelope
 
-- Все ответы API должны быть `application/json`.
-- Все даты должны быть в ISO 8601 UTC.
-- Все `id` должны быть UUID string.
-- Все endpoints должны быть доступны frontend с `http://localhost:5173` через CORS.
-- Ошибки должны возвращаться в едином формате.
-- Для списков `assets`, `findings`, `scans` нужна сортировка от новых к старым или явно задокументированная сортировка.
-- Для больших списков нужен `limit` и `offset`.
+Frontend сейчас умеет читать разные форматы ошибок, но backend лучше привести к единому contract.
 
-### Единый формат ошибок
-
-Сейчас ошибки возвращаются не одинаково: где-то `detail` строка, где-то объект.
-
-Нужно привести к одному формату:
+### Формат
 
 ```json
 {
@@ -104,117 +115,65 @@ juice.lab.local:8088
 }
 ```
 
-Примеры кодов:
+### Что сделать
+
+- Ввести единый helper/exception handler для API errors.
+- Покрыть минимум:
+  - target validation failed;
+  - target not allowed;
+  - active scan already running;
+  - scan not found;
+  - report not found.
+- Не менять successful response DTO.
+
+### Acceptance criteria
+
+- `400`, `404`, `409` возвращают единый JSON envelope.
+- Frontend продолжает работать без изменений.
+- Добавлены backend tests на error shape.
+
+## Задача 5. Parser fixtures без runtime-конфликта
+
+Если ahorsov уже меняет adapters, не трогать их. Но можно подготовить fixtures и тестовый контракт.
+
+### Что сделать
+
+- Добавить fixtures для ожидаемых outputs:
+  - subfinder;
+  - httpx JSON;
+  - nuclei JSONL.
+- Добавить документацию expected normalized shape.
+- Если adapters в этот момент активно меняются у ahorsov, оставить fixtures/docs без правок runtime-кода.
+
+### Acceptance criteria
+
+- Fixtures лежат в понятном месте, например:
 
 ```text
-TARGET_NOT_ALLOWED
-TARGET_VALIDATION_FAILED
-SCAN_ALREADY_RUNNING
-SCAN_NOT_FOUND
-REPORT_NOT_FOUND
-INTERNAL_ERROR
+tests/fixtures/scanners/
 ```
 
-### CORS
+- Их можно использовать позже для parser tests.
+- Нет конфликтов с текущим scanner runtime PR.
 
-Добавить CORS middleware для frontend dev server:
+## Что не делать в этой задаче
+
+- Не включать real scanners.
+- Не менять Dockerfile под scanner tools.
+- Не менять frontend UI.
+- Не подключать реальную нейросеть/API.
+- Не запускать внешние scans.
+
+## Ожидаемый результат этапа
+
+После задач ikarpenko у проекта появится фундамент для Palantir-like ценности:
 
 ```text
-allow_origins=["http://localhost:5173"]
-allow_methods=["GET", "POST", "OPTIONS"]
-allow_headers=["*"]
+raw findings
+-> normalized scan context
+-> contextual risk score
+-> evidence-based AI summary input
+-> defensive priorities
 ```
 
-### UTC даты
-
-Сейчас модели используют `datetime.utcnow`, но это naive datetime без timezone.
-
-Нужно:
-
-- перейти на timezone-aware UTC;
-- проверить JSON serialization;
-- убедиться, что frontend получает даты в ISO 8601 UTC, например:
-
-```json
-"created_at": "2026-06-12T10:15:30Z"
-```
-
-или:
-
-```json
-"created_at": "2026-06-12T10:15:30+00:00"
-```
-
-### Сортировка списков
-
-Сейчас:
-
-- `scans` сортируются `created_at.desc()` — нормально;
-- `audit` сортируется `created_at.desc()` — нормально;
-- `assets` сортируются `Asset.created_at` по возрастанию;
-- `findings` сортируются `Finding.created_at` по возрастанию.
-
-Для frontend лучше сделать:
-
-```text
-created_at desc
-```
-
-для `scans`, `assets`, `findings`, `audit`.
-
-Если порядок будет другим, его нужно явно задокументировать.
-
-## Acceptance criteria
-
-### LAB_MODE=false
-
-- Обычный mock scan работает как раньше.
-- `ENABLE_REAL_SCANNERS=false` по-прежнему не запускает external scanner binaries.
-- Обычная target validation не ослаблена.
-- Lab-only targets не получают специальных разрешений.
-
-### LAB_MODE=true
-
-- `admin.lab.local:8088` разрешен.
-- `legacy.lab.local:8088` разрешен.
-- `files.lab.local:8088` разрешен.
-- `juice.lab.local:8088` разрешен, если входит в allowlist.
-- `google.com` запрещен.
-- `example.com` запрещен, если не входит в lab allowlist.
-- `127.0.0.1:8088` запрещен, если явно не добавлен в отдельный безопасный local allowlist.
-- Не выполняются POST/PUT/PATCH/DELETE.
-- Найденные markers сохраняются как `Finding`.
-- Для каждого успешного scan создаются `Asset` и `RiskReport`.
-- При недоступном lab target scan переходит в `failed`, а не зависает в `running`.
-
-### API
-
-- `POST /api/scans/start` возвращает JSON.
-- `GET /api/scans` возвращает `total`, `limit`, `offset`, `items`.
-- `GET /api/scans/{scan_id}/assets` возвращает `total`, `limit`, `offset`, `items`.
-- `GET /api/scans/{scan_id}/findings` возвращает `total`, `limit`, `offset`, `items`.
-- `GET /api/scans/{scan_id}/report` возвращает JSON report.
-- Ошибки `400`, `404`, `409`, `500` возвращаются в едином JSON-формате.
-- CORS работает для `http://localhost:5173`.
-
-## Тесты
-
-Добавить backend tests на:
-
-- target allowlist в `LAB_MODE`;
-- запрет внешних targets в `LAB_MODE`;
-- сохранение `Asset`, `Finding`, `RiskReport`;
-- единый формат ошибок;
-- сортировку списков от новых к старым;
-- `limit` и `offset`;
-- scan lifecycle:
-  - `created -> running -> completed`;
-  - `created -> running -> failed`.
-
-## Связанные заметки
-
-Команды и текущие scanner gaps описаны в:
-
-```text
-docs/scanner-commands.md
-```
+Это отдельный слой поверх real scanner work ahorsov, поэтому ikarpenko сможет подключиться через несколько дней без болезненных конфликтов.
