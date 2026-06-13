@@ -26,7 +26,9 @@ def authorize_target(raw_target: str, confirm_authorized: bool, settings: Settin
 
     if settings.lab_mode:
         allowed_targets = settings.allowed_lab_target_list
-        if allowed_targets and target not in allowed_targets:
+        if not allowed_targets:
+            raise TargetPolicyError("LAB_MODE requires ALLOWED_LAB_TARGETS to be configured")
+        if target not in allowed_targets:
             raise TargetPolicyError("Target is not allowed in LAB_MODE")
         return TargetPolicyDecision(target=target, decision="allowed", reason="Allowed LAB_MODE target")
 

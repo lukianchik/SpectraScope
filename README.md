@@ -14,6 +14,7 @@ This project is intended only for assets you own or are explicitly authorized to
 
 By default `ENABLE_REAL_SCANNERS=false`, so scanner adapters return mock results and do not execute external scanner binaries.
 The mock pipeline returns dashboard-ready preview data for public-domain style scans such as `example.com`: 24 assets, 15 findings, top risks, and a generated report summary.
+This default mode validates the product flow end-to-end, but it is not a real external recon scan. Real scanner execution must be explicitly enabled and allowlisted as described in [Scanner Safety](#scanner-safety).
 
 ## Run
 
@@ -115,6 +116,7 @@ Subdomains of allowlisted domains are accepted. Direct IP targets are still reje
 `LAB_MODE=true` switches the backend into a safe demo-only path for `lab/` services. In this mode:
 
 - only targets from `ALLOWED_LAB_TARGETS` are accepted;
+- an empty `ALLOWED_LAB_TARGETS` denies all lab scans;
 - targets may use `host:port` such as `admin.lab.local:8088`;
 - the pipeline performs only safe HTTP `GET` requests;
 - findings are generated from deterministic demo markers rather than external scanner binaries.
