@@ -6,11 +6,16 @@ services:
     env_file:
       - .env.example
     environment:
-      DATABASE_URL: postgresql+psycopg2://spectrascope:spectrascope@postgres:5432/spectrascope
-      REDIS_URL: redis://redis:6379/0
-      CELERY_BROKER_URL: redis://redis:6379/0
-      CELERY_RESULT_BACKEND: redis://redis:6379/1
-      CELERY_TASK_ALWAYS_EAGER: "false"
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg2://spectrascope:spectrascope@postgres:5432/spectrascope}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/1}
+      CELERY_TASK_ALWAYS_EAGER: ${CELERY_TASK_ALWAYS_EAGER:-false}
+      ENABLE_REAL_SCANNERS: ${ENABLE_REAL_SCANNERS:-false}
+      ENABLE_NMAP: ${ENABLE_NMAP:-false}
+      LAB_MODE: ${LAB_MODE:-false}
+      ALLOWED_TARGET_DOMAINS: ${ALLOWED_TARGET_DOMAINS:-}
+      ALLOWED_LAB_TARGETS: ${ALLOWED_LAB_TARGETS:-admin.lab.local:8088,legacy.lab.local:8088,files.lab.local:8088}
     ports:
       - "8000:8000"
     healthcheck:
@@ -32,11 +37,16 @@ services:
     env_file:
       - .env.example
     environment:
-      DATABASE_URL: postgresql+psycopg2://spectrascope:spectrascope@postgres:5432/spectrascope
-      REDIS_URL: redis://redis:6379/0
-      CELERY_BROKER_URL: redis://redis:6379/0
-      CELERY_RESULT_BACKEND: redis://redis:6379/1
-      CELERY_TASK_ALWAYS_EAGER: "false"
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg2://spectrascope:spectrascope@postgres:5432/spectrascope}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/1}
+      CELERY_TASK_ALWAYS_EAGER: ${CELERY_TASK_ALWAYS_EAGER:-false}
+      ENABLE_REAL_SCANNERS: ${ENABLE_REAL_SCANNERS:-false}
+      ENABLE_NMAP: ${ENABLE_NMAP:-false}
+      LAB_MODE: ${LAB_MODE:-false}
+      ALLOWED_TARGET_DOMAINS: ${ALLOWED_TARGET_DOMAINS:-}
+      ALLOWED_LAB_TARGETS: ${ALLOWED_LAB_TARGETS:-admin.lab.local:8088,legacy.lab.local:8088,files.lab.local:8088}
     depends_on:
       backend:
         condition: service_healthy
