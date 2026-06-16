@@ -71,6 +71,16 @@ export function Dashboard() {
 		currentScan?.status === 'created' || currentScan?.status === 'running';
 
 	useEffect(() => {
+		if (!activeScanId || currentScan?.status !== 'completed') {
+			return;
+		}
+
+		void queryClient.invalidateQueries({ queryKey: ['scan-assets', activeScanId] });
+		void queryClient.invalidateQueries({ queryKey: ['scan-findings', activeScanId] });
+		void queryClient.invalidateQueries({ queryKey: ['scan-report', activeScanId] });
+	}, [activeScanId, currentScan?.status, queryClient]);
+
+	useEffect(() => {
 		if (!shouldPollCollections) {
 			return;
 		}
