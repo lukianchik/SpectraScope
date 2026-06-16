@@ -1,0 +1,18 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.scanners
+    environment:
+      ENABLE_REAL_SCANNERS: ${ENABLE_REAL_SCANNERS:-true}
+      ENABLE_NMAP: ${ENABLE_NMAP:-false}
+      ALLOWED_TARGET_DOMAINS: "${ALLOWED_TARGET_DOMAINS:?Set ALLOWED_TARGET_DOMAINS to domains you own or are authorized to scan}"
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.scanners
+    environment:
+      ENABLE_REAL_SCANNERS: ${ENABLE_REAL_SCANNERS:-true}
+      ENABLE_NMAP: ${ENABLE_NMAP:-false}
+      ALLOWED_TARGET_DOMAINS: "${ALLOWED_TARGET_DOMAINS:?Set ALLOWED_TARGET_DOMAINS to domains you own or are authorized to scan}"

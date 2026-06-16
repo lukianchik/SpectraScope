@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     enable_real_scanners: bool = Field(default=False, alias="ENABLE_REAL_SCANNERS")
     enable_nmap: bool = Field(default=False, alias="ENABLE_NMAP")
     scanner_timeout_seconds: int = Field(default=60, alias="SCANNER_TIMEOUT_SECONDS")
+    scanner_max_results: int = Field(default=200, alias="SCANNER_MAX_RESULTS")
+    nuclei_templates_path: str = Field(default="", alias="NUCLEI_TEMPLATES_PATH")
     allowed_target_domains: str = Field(default="", alias="ALLOWED_TARGET_DOMAINS")
     allowed_lab_targets: str = Field(default="", alias="ALLOWED_LAB_TARGETS")
     celery_task_always_eager: bool = Field(default=False, alias="CELERY_TASK_ALWAYS_EAGER")
@@ -33,6 +35,10 @@ class Settings(BaseSettings):
     @property
     def allowed_lab_target_list(self) -> list[str]:
         return [item.strip().lower() for item in self.allowed_lab_targets.split(",") if item.strip()]
+
+    @property
+    def nuclei_template_paths(self) -> list[str]:
+        return [item.strip() for item in self.nuclei_templates_path.split(",") if item.strip()]
 
 
 @lru_cache

@@ -58,6 +58,14 @@ export interface ScanStep {
 	title: string;
 	subtitle: string;
 	completed: boolean;
+	active?: boolean;
+}
+
+export interface ScanProgress {
+	percent: number;
+	label: string;
+	detail: string;
+	isActive: boolean;
 }
 
 export const LAB_TARGET_PRESETS = [
@@ -134,34 +142,133 @@ export function buildScanSteps(
 	assets: AssetResponse[] = [],
 	findings: FindingResponse[] = [],
 	report: RiskReportResponse | null = null,
+	progressPercent = 0,
 ): ScanStep[] {
 	const scanStarted = scan !== null;
 	const scanFinished = scan?.status === 'completed' || scan?.status === 'failed';
 	const hasAssets = assets.length > 0 || scanFinished;
 	const hasFindings = findings.length > 0 || scanFinished;
+	const activeStepIndex =
+		scan?.status === 'created'
+			? 0
+			: scan?.status === 'running'
+				? progressPercent < 45
+					? 1
+					: progressPercent < 88
+						? 2
+						: 3
+				: -1;
 
 	return [
 		{
 			title: 'Target',
 			subtitle: scan?.target ?? 'Waiting for submission',
 			completed: scanStarted,
+			active: activeStepIndex === 0,
 		},
 		{
 			title: 'Live Hosts',
 			subtitle: scanStarted ? `${assets.length} discovered` : 'Pending',
 			completed: hasAssets,
+			active: activeStepIndex === 1,
 		},
 		{
 			title: 'Findings',
 			subtitle: scanStarted ? `${findings.length} flagged` : 'Pending',
 			completed: hasFindings,
+			active: activeStepIndex === 2,
 		},
 		{
 			title: 'Report',
 			subtitle: report ? 'Generated' : scan?.status === 'failed' ? 'Unavailable' : 'Pending',
 			completed: report !== null,
+			active: activeStepIndex === 3,
 		},
 	];
+}
+
+export function buildScanProgress(
+	scan: ScanResponse | null,
+	assets: AssetResponse[] = [],
+	findings: FindingResponse[] = [],
+	report: RiskReportResponse | null = null,
+	now = Date.now(),
+): ScanProgress {
+	if (!scan) {
+		return {
+			percent: 0,
+			label: 'Idle',
+			detail: 'Waiting for a target',
+			isActive: false,
+		};
+	}
+
+	if (scan.status === 'completed') {
+		return {
+			percent: 100,
+			label: 'Completed',
+			detail: report ? 'Report generated' : 'Scan finished',
+			isActive: false,
+		};
+	}
+
+	if (scan.status === 'failed') {
+		return {
+			percent: 100,
+			label: 'Failed',
+			detail: 'Review the error message',
+			isActive: false,
+		};
+	}
+
+	if (scan.status === 'created') {
+		return {
+			percent: 8,
+			label: 'Queued',
+			detail: 'Waiting for worker',
+			isActive: true,
+		};
+	}
+
+	const startedAt = parseBackendTimestamp(scan.started_at ?? scan.created_at).getTime();
+	const elapsedSeconds = Math.max(0, Math.floor((now - startedAt) / 1000));
+	const timedProgress = Math.min(88, 12 + Math.floor((elapsedSeconds / 45) * 76));
+	const dataProgress = Math.max(assets.length > 0 ? 52 : 0, findings.length > 0 ? 72 : 0);
+	const percent = Math.max(timedProgress, dataProgress);
+
+	if (percent < 35) {
+		return {
+			percent,
+			label: 'Discovery',
+			detail: `Enumerating target surface (${elapsedSeconds}s)`,
+			isActive: true,
+		};
+	}
+
+	if (percent < 62) {
+		return {
+			percent,
+			label: 'HTTP probing',
+			detail: `${assets.length} live host${assets.length === 1 ? '' : 's'} found`,
+			isActive: true,
+		};
+	}
+
+	if (percent < 88) {
+		return {
+			percent,
+			label: 'Scanner checks',
+			detail: `Running safe nuclei checks (${elapsedSeconds}s)`,
+			isActive: true,
+		};
+	}
+
+	return {
+		percent,
+		label: 'Report',
+		detail: 'Compiling results',
+		isActive: true,
+	};
 }
 
 export function getRiskScore(findings: FindingResponse[] = []) {
@@ -234,7 +341,7 @@ export function formatUtcTimestamp(value: string) {
 	return new Intl.DateTimeFormat(undefined, {
 		dateStyle: 'medium',
 		timeStyle: 'short',
-	}).format(new Date(value));
+	}).format(parseBackendTimestamp(value));
 }
 
 function classifyRiskLabel(score: number) {
@@ -251,4 +358,9 @@ function classifyRiskLabel(score: number) {
 	}
 
 	return 'Minimal';
+}
+
+function parseBackendTimestamp(value: string) {
+	const hasTimezone = /(?:z|[+-]\d{2}:\d{2})$/i.test(value);
+	return new Date(hasTimezone ? value : `${value}Z`);
 }

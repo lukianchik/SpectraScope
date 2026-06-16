@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 
 SEVERITY_ORDER = {"critical": 5, "high": 4, "medium": 3, "low": 2, "info": 1}
 TITLE_RE = re.compile(r"<title>(.*?)</title>", re.IGNORECASE | re.DOTALL)
+SUPPORTED_SCAN_PROFILES = {"discovery", "safe", "lab"}
 
 LAB_FINDING_DEFINITIONS = {
     "admin.lab.local:8088": {
@@ -83,9 +84,21 @@ def run_scan_pipeline(scan_id: str, db: Session, settings: Settings | None = Non
         db.commit()
 
         target = normalize_target(scan.target)
-        logger.info("Starting safe scan pipeline for target=%s scan_id=%s", target, scan_id)
+        scan_profile = scan.scan_profile or "safe"
+        if scan_profile not in SUPPORTED_SCAN_PROFILES:
+            raise ValueError(f"Unsupported scan_profile '{scan_profile}'")
+
+        logger.info(
+            "Starting scan pipeline scan_id=%s target=%s profile=%s real_scanners=%s",
+            scan_id,
+            target,
+            scan_profile,
+            settings.enable_real_scanners,
+        )
 
         if settings.lab_mode:
+            if scan_profile != "lab":
+                raise ValueError("LAB_MODE scans require scan_profile='lab'")
             _run_lab_mode_pipeline(scan, db, settings, target)
             scan.status = "completed"
             scan.finished_at = datetime.utcnow()
@@ -95,9 +108,16 @@ def run_scan_pipeline(scan_id: str, db: Session, settings: Settings | None = Non
             logger.info("Completed LAB_MODE scan pipeline scan_id=%s findings=%s", scan_id, len(scan.findings))
             return
 
+        if scan_profile == "lab":
+            raise ValueError("scan_profile='lab' requires LAB_MODE=true")
+
+        logger.info("Scan stage=discovery scan_id=%s target=%s", scan_id, target)
         subdomains = SubfinderAdapter(settings).discover(target)
         hostnames = list(dict.fromkeys(result.hostname for result in subdomains))
+        if settings.enable_real_scanners and target not in hostnames:
+            hostnames.insert(0, target)
 
+        logger.info("Scan stage=probing scan_id=%s hostnames=%s", scan_id, len(hostnames))
         alive_results = HttpxAdapter(settings).probe(hostnames)
         assets_by_hostname: dict[str, Asset] = {}
         for result in alive_results:
@@ -115,49 +135,53 @@ def run_scan_pipeline(scan_id: str, db: Session, settings: Settings | None = Non
 
         db.flush()
 
-        urls = [result.url for result in alive_results if result.url]
-        nuclei_findings = NucleiAdapter(settings).scan(urls)
-        seen_findings: set[tuple[str, str | None, str]] = set()
-        for result in nuclei_findings:
-            hostname = _hostname_from_finding_host(result.host)
-            asset = assets_by_hostname.get(hostname)
-            dedupe_key = (hostname, result.template_id, result.name)
-            if dedupe_key in seen_findings:
-                continue
-            seen_findings.add(dedupe_key)
-            finding = Finding(
-                scan_id=scan.id,
-                asset_id=asset.id if asset else None,
-                source_tool="nuclei",
-                template_id=result.template_id,
-                name=result.name,
-                severity=_normalize_severity(result.severity),
-                description=result.description,
-                matched_at=result.matched_at,
-                cve=result.cve,
-                cvss=result.cvss,
-                raw_json=result.raw_json,
-            )
-            db.add(finding)
-
-        service_results = NmapAdapter(settings).scan_services(list(assets_by_hostname))
-        for result in service_results:
-            asset = assets_by_hostname.get(result.host)
-            if asset is None:
-                continue
-            db.add(
-                Service(
-                    asset_id=asset.id,
-                    port=result.port,
-                    protocol=result.protocol,
-                    service_name=result.service_name,
-                    product=result.product,
-                    version=result.version,
-                    banner=result.banner,
+        if scan_profile == "safe":
+            logger.info("Scan stage=nuclei scan_id=%s urls=%s", scan_id, len(alive_results))
+            urls = [result.url for result in alive_results if result.url]
+            nuclei_findings = NucleiAdapter(settings).scan(urls)
+            seen_findings: set[tuple[str, str | None, str]] = set()
+            for result in nuclei_findings:
+                hostname = _hostname_from_finding_host(result.host)
+                asset = assets_by_hostname.get(hostname)
+                dedupe_key = (hostname, result.template_id, result.name)
+                if dedupe_key in seen_findings:
+                    continue
+                seen_findings.add(dedupe_key)
+                finding = Finding(
+                    scan_id=scan.id,
+                    asset_id=asset.id if asset else None,
+                    source_tool="nuclei",
+                    template_id=result.template_id,
+                    name=result.name,
+                    severity=_normalize_severity(result.severity),
+                    description=result.description,
+                    matched_at=result.matched_at,
+                    cve=result.cve,
+                    cvss=result.cvss,
+                    raw_json=result.raw_json,
                 )
-            )
+                db.add(finding)
+
+            logger.info("Scan stage=services scan_id=%s hosts=%s", scan_id, len(assets_by_hostname))
+            service_results = NmapAdapter(settings).scan_services(list(assets_by_hostname))
+            for result in service_results:
+                asset = assets_by_hostname.get(result.host)
+                if asset is None:
+                    continue
+                db.add(
+                    Service(
+                        asset_id=asset.id,
+                        port=result.port,
+                        protocol=result.protocol,
+                        service_name=result.service_name,
+                        product=result.product,
+                        version=result.version,
+                        banner=result.banner,
+                    )
+                )
 
         db.flush()
+        logger.info("Scan stage=reporting scan_id=%s", scan_id)
         report = build_risk_report(scan, list(scan.findings), len(assets_by_hostname))
         db.add(report)
 

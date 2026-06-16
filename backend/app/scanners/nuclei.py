@@ -1,5 +1,23 @@
+import os
+import tempfile
+
 from app.core.config import Settings
 from app.scanners.base import NucleiFinding, run_jsonl_command, should_use_mock
+
+
+NUCLEI_TIMEOUT_SECONDS = 3
+NUCLEI_CONCURRENCY = 3
+NUCLEI_BULK_SIZE = 3
+DEFAULT_SAFE_NUCLEI_TEMPLATES = [
+    "/root/nuclei-templates/http/exposures/apis/swagger-api.yaml",
+    "/root/nuclei-templates/http/exposures/apis/openapi.yaml",
+    "/root/nuclei-templates/http/exposures/configs/git-config.yaml",
+    "/root/nuclei-templates/http/exposures/configs/git-credentials-disclosure.yaml",
+    "/root/nuclei-templates/http/exposures/configs/config-json.yaml",
+    "/root/nuclei-templates/http/exposures/configs/phpinfo-files.yaml",
+    "/root/nuclei-templates/http/exposures/files/javascript-env.yaml",
+    "/root/nuclei-templates/http/exposures/files/next-js-config-file.yaml",
+]
 
 
 class NucleiAdapter:
@@ -91,25 +109,55 @@ class NucleiAdapter:
             ]
             return ordered_findings + extra_missing_headers + extra_findings
 
+        if not urls:
+            return []
+
+        urls_file_path = _write_urls_file(urls)
+        try:
+            command = [
+                "nuclei",
+                "-l",
+                urls_file_path,
+                "-jsonl",
+                "-severity",
+                "info,low,medium,high,critical",
+                "-exclude-tags",
+                "intrusive,dos,fuzz",
+                "-duc",
+                "-timeout",
+                str(NUCLEI_TIMEOUT_SECONDS),
+                "-retries",
+                "0",
+                "-c",
+                str(NUCLEI_CONCURRENCY),
+                "-bs",
+                str(NUCLEI_BULK_SIZE),
+                "-silent",
+            ]
+            for template_path in self.settings.nuclei_template_paths or DEFAULT_SAFE_NUCLEI_TEMPLATES:
+                command.extend(["-t", template_path])
+
+            rows = run_jsonl_command(command, timeout=self.settings.scanner_timeout_seconds)
+        finally:
+            os.unlink(urls_file_path)
+
         findings: list[NucleiFinding] = []
-        for url in urls:
-            command = ["nuclei", "-u", url, "-jsonl", "-severity", "info,low,medium,high,critical"]
-            for row in run_jsonl_command(command, timeout=self.settings.scanner_timeout_seconds):
-                info = row.get("info") or {}
-                classification = info.get("classification") or {}
-                findings.append(
-                    NucleiFinding(
-                        host=str(row.get("host") or url),
-                        name=str(info.get("name") or row.get("template-id") or "Nuclei finding"),
-                        severity=str(info.get("severity") or "info").lower(),
-                        template_id=row.get("template-id"),
-                        description=info.get("description"),
-                        cve=_first_or_none(classification.get("cve-id")),
-                        matched_at=row.get("matched-at"),
-                        cvss=_as_float(classification.get("cvss-score")),
-                        raw_json=row,
-                    )
+        for row in rows:
+            info = row.get("info") or {}
+            classification = info.get("classification") or {}
+            findings.append(
+                NucleiFinding(
+                    host=str(row.get("host") or row.get("matched-at") or ""),
+                    name=str(info.get("name") or row.get("template-id") or "Nuclei finding"),
+                    severity=str(info.get("severity") or "info").lower(),
+                    template_id=row.get("template-id"),
+                    description=info.get("description"),
+                    cve=_first_or_none(classification.get("cve-id")),
+                    matched_at=row.get("matched-at"),
+                    cvss=_as_float(classification.get("cvss-score")),
+                    raw_json=row,
                 )
+            )
         return findings
 
 
@@ -126,6 +174,13 @@ def _as_float(value: object) -> float | None:
         return float(value) if value is not None else None
     except (TypeError, ValueError):
         return None
+
+
+def _write_urls_file(urls: list[str]) -> str:
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", delete=False) as urls_file:
+        for url in urls:
+            urls_file.write(f"{url}\n")
+        return urls_file.name
 
 
 def _mock_finding(

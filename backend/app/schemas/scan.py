@@ -5,13 +5,14 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field
 
 
+ScanProfile = Literal["discovery", "safe", "lab"]
 ScanStatus = Literal["created", "running", "completed", "failed"]
 Severity = Literal["critical", "high", "medium", "low", "info"]
 
 
 class ScanStartRequest(BaseModel):
     target: str = Field(min_length=3, max_length=255, examples=["example.com", "admin.lab.local:8088"])
-    scan_profile: str = Field(default="safe", max_length=64)
+    scan_profile: ScanProfile = Field(default="safe")
     confirm_authorized: bool = Field(
         default=False,
         description="Must be true to confirm that you own or are authorized to assess the target.",

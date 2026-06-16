@@ -21,3 +21,21 @@ def test_lab_mode_requires_configured_allowlist() -> None:
     settings = Settings(LAB_MODE=True, ALLOWED_LAB_TARGETS="")
     with pytest.raises(TargetPolicyError, match="ALLOWED_LAB_TARGETS"):
         authorize_target("admin.lab.local:8088", True, settings)
+
+
+def test_real_scanner_mode_requires_configured_allowlist() -> None:
+    settings = Settings(ENABLE_REAL_SCANNERS=True, ALLOWED_TARGET_DOMAINS="")
+    with pytest.raises(TargetPolicyError, match="ALLOWED_TARGET_DOMAINS"):
+        authorize_target("example.com", True, settings)
+
+
+def test_real_scanner_mode_allows_configured_domain_and_subdomain() -> None:
+    settings = Settings(ENABLE_REAL_SCANNERS=True, ALLOWED_TARGET_DOMAINS="example.com")
+    assert authorize_target("example.com", True, settings).target == "example.com"
+    assert authorize_target("app.example.com", True, settings).target == "app.example.com"
+
+
+def test_real_scanner_mode_rejects_target_outside_allowlist() -> None:
+    settings = Settings(ENABLE_REAL_SCANNERS=True, ALLOWED_TARGET_DOMAINS="example.com")
+    with pytest.raises(TargetPolicyError, match="allowlist"):
+        authorize_target("example.org", True, settings)

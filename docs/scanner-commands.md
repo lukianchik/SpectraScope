@@ -25,8 +25,12 @@ For real scanner testing:
 ENABLE_REAL_SCANNERS=true
 ENABLE_NMAP=false
 SCANNER_TIMEOUT_SECONDS=120
+SCANNER_MAX_RESULTS=200
+NUCLEI_TEMPLATES_PATH=
 ALLOWED_TARGET_DOMAINS=example.com
 ```
+
+When `ENABLE_REAL_SCANNERS=true`, `ALLOWED_TARGET_DOMAINS` is mandatory. An empty allowlist must deny real scanner launches.
 
 ## Required Binaries
 
@@ -36,17 +40,44 @@ The worker container or local backend environment needs these binaries on `PATH`
 subfinder
 httpx
 nuclei
-nmap
 ```
 
-Use `nmap` only for explicitly enabled safe service detection.
+Use `nmap` only for explicitly enabled safe service detection. It is not part of the default real scanner MVP path.
+
+The scanner-enabled Docker runtime is built with:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.real-scanners.yml build
+```
+
+Check binaries inside the worker image/container with:
+
+```bash
+subfinder -version
+httpx -version
+nuclei -version
+```
+
+## Scan Profiles
+
+Backend scan profiles:
+
+```text
+discovery
+safe
+lab
+```
+
+- `discovery`: runs `subfinder` and `httpx`, then creates a report from discovered assets.
+- `safe`: runs `subfinder`, `httpx`, and `nuclei`.
+- `lab`: requires `LAB_MODE=true` and never invokes external scanner binaries.
 
 ## Subdomain Discovery
 
 Current command:
 
 ```bash
-subfinder -d example.com -silent -json
+subfinder -d example.com -silent -json -timeout 30
 ```
 
 Expected output: JSON lines.
@@ -68,6 +99,7 @@ Recommended backend notes:
 - Keep `-silent` to reduce noisy stderr/stdout.
 - Keep `-json` for structured parsing.
 - Deduplicate hostnames after parsing.
+- Keep a bounded result limit through `SCANNER_MAX_RESULTS`.
 - Do not pass shell strings; keep argv as a list.
 
 ## HTTP Probing
@@ -120,10 +152,21 @@ Backend task:
 
 ## Nuclei Findings
 
-Current command, one URL at a time:
+Current default command, one batch per scan:
 
 ```bash
-nuclei -u https://api.example.com -jsonl -severity info,low,medium,high,critical
+nuclei -l urls.txt -jsonl \
+  -severity info,low,medium,high,critical \
+  -exclude-tags intrusive,dos,fuzz \
+  -duc -timeout 3 -retries 0 -c 3 -bs 3 -silent \
+  -t /root/nuclei-templates/http/exposures/apis/swagger-api.yaml \
+  -t /root/nuclei-templates/http/exposures/apis/openapi.yaml \
+  -t /root/nuclei-templates/http/exposures/configs/git-config.yaml \
+  -t /root/nuclei-templates/http/exposures/configs/git-credentials-disclosure.yaml \
+  -t /root/nuclei-templates/http/exposures/configs/config-json.yaml \
+  -t /root/nuclei-templates/http/exposures/configs/phpinfo-files.yaml \
+  -t /root/nuclei-templates/http/exposures/files/javascript-env.yaml \
+  -t /root/nuclei-templates/http/exposures/files/next-js-config-file.yaml
 ```
 
 Expected output: JSON lines.
@@ -162,10 +205,12 @@ NucleiFinding(
 )
 ```
 
-Recommended batch command for backend improvement:
+The default scanner image uses a small starter pack of safe exposure/config checks. This keeps MVP scans bounded and avoids running the full public nuclei template catalog on every target.
+
+To override templates:
 
 ```bash
-nuclei -l urls.txt -jsonl -severity info,low,medium,high,critical
+NUCLEI_TEMPLATES_PATH=/path/to/template.yaml,/path/to/templates-dir
 ```
 
 Recommended lab command:
@@ -174,11 +219,11 @@ Recommended lab command:
 nuclei -l urls.txt -jsonl -severity info,low,medium,high,critical -t ./lab/nuclei-templates
 ```
 
-Backend task:
+Backend notes:
 
-- Add `nuclei_templates_path` to `Settings`, mapped from `NUCLEI_TEMPLATES_PATH`.
-- If the value is set, append `-t <path>` to the nuclei command.
-- Prefer one batch nuclei run per scan over one subprocess per URL.
+- `NUCLEI_TEMPLATES_PATH` is optional. If it is empty, the backend uses the scanner image starter pack.
+- If it is set, the backend appends `-t <path>` for each comma-separated value.
+- The backend runs one batch nuclei subprocess per scan instead of one subprocess per URL.
 
 ## Nmap Service Detection
 
@@ -250,9 +295,8 @@ nuclei -l urls.txt -jsonl -t ./lab/nuclei-templates
 
 ## Current Gaps To Fix
 
-- `NUCLEI_TEMPLATES_PATH` exists in `.env.example`, but `Settings` and `NucleiAdapter` do not use it yet.
+- Expand the default safe nuclei starter pack after we measure scan time on a few real owned domains.
 - `DOMAIN_RE` rejects `localhost`; local lab testing should use `*.lab.local` hosts entries or a dedicated local-target mode.
-- `httpx` and `nuclei` currently run one subprocess per input. Batch mode will be faster and easier to limit.
 - Real scanner binaries are not installed by `backend/requirements.txt`; they must be installed in the Docker image or documented for local backend setup.
 
 ## LAB_MODE Notes

@@ -33,6 +33,9 @@ def authorize_target(raw_target: str, confirm_authorized: bool, settings: Settin
         return TargetPolicyDecision(target=target, decision="allowed", reason="Allowed LAB_MODE target")
 
     allowed_domains = settings.allowed_domain_list
+    if settings.enable_real_scanners and not allowed_domains:
+        raise TargetPolicyError("Real scanner mode requires ALLOWED_TARGET_DOMAINS to be configured")
+
     if allowed_domains and not _matches_allowed_domain(target, allowed_domains):
         raise TargetPolicyError("Target is outside the configured allowlist")
 

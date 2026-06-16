@@ -1,5 +1,12 @@
+import os
+import tempfile
+
 from app.core.config import Settings
 from app.scanners.base import HttpxResult, run_jsonl_command, should_use_mock
+
+
+HTTPX_TIMEOUT_SECONDS = 5
+HTTPX_THREADS = 25
 
 
 class HttpxAdapter:
@@ -27,20 +34,46 @@ class HttpxAdapter:
                 for index, hostname in enumerate(hostnames)
             ]
 
+        if not hostnames:
+            return []
+
+        hosts_file_path = _write_hosts_file(hostnames)
+        try:
+            command = [
+                "httpx",
+                "-l",
+                hosts_file_path,
+                "-json",
+                "-silent",
+                "-tech-detect",
+                "-title",
+                "-status-code",
+                "-threads",
+                str(HTTPX_THREADS),
+                "-timeout",
+                str(HTTPX_TIMEOUT_SECONDS),
+                "-retries",
+                "0",
+            ]
+            rows = run_jsonl_command(command, timeout=self.settings.scanner_timeout_seconds)
+        finally:
+            os.unlink(hosts_file_path)
+
         results: list[HttpxResult] = []
-        for hostname in hostnames:
-            command = ["httpx", "-u", hostname, "-json", "-silent", "-tech-detect", "-title", "-status-code"]
-            for row in run_jsonl_command(command, timeout=self.settings.scanner_timeout_seconds):
-                results.append(
-                    HttpxResult(
-                        hostname=str(row.get("input") or row.get("host") or hostname).lower(),
-                        url=str(row.get("url") or ""),
-                        status_code=_as_int(row.get("status_code")),
-                        title=row.get("title"),
-                        technologies=list(row.get("tech") or []),
-                        ip=row.get("host"),
-                    )
+        for row in rows:
+            hostname = str(row.get("input") or row.get("host") or "").lower()
+            if not hostname:
+                continue
+            results.append(
+                HttpxResult(
+                    hostname=hostname,
+                    url=str(row.get("url") or ""),
+                    status_code=_as_int(row.get("status_code")),
+                    title=row.get("title"),
+                    technologies=list(row.get("tech") or []),
+                    ip=_first_ip(row),
                 )
+            )
         return results
 
 
@@ -49,6 +82,16 @@ def _as_int(value: object) -> int | None:
         return int(value) if value is not None else None
     except (TypeError, ValueError):
         return None
+
+
+def _first_ip(row: dict) -> str | None:
+    host_ip = row.get("host_ip")
+    if host_ip:
+        return str(host_ip)
+    addresses = row.get("a")
+    if isinstance(addresses, list) and addresses:
+        return str(addresses[0])
+    return None
 
 
 def _mock_ip(hostname: str, fixed_ips: dict[str, str], index: int) -> str:
@@ -70,3 +113,10 @@ def _mock_technologies(hostname: str) -> list[str]:
     if prefix in {"blog", "www", "docs"}:
         return ["nginx", "static-site"]
     return ["nginx"]
+
+
+def _write_hosts_file(hostnames: list[str]) -> str:
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", delete=False) as hosts_file:
+        for hostname in hostnames:
+            hosts_file.write(f"{hostname}\n")
+        return hosts_file.name

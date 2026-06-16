@@ -39,8 +39,8 @@ export function StartScan({ activeQueueCount, errorMessage, isSubmitting, onSubm
 		watch,
 	} = useForm<StartScanFormValues>({
 		defaultValues: {
-			target: LAB_TARGET_PRESETS[0],
-			scanProfile: 'lab',
+			target: 'example.com',
+			scanProfile: 'safe',
 			notificationChannel: 'dashboard',
 			confirmAuthorized: true,
 		},
@@ -94,6 +94,7 @@ export function StartScan({ activeQueueCount, errorMessage, isSubmitting, onSubm
 						className={styles.presetButton}
 						onClick={() => {
 							setValue('target', preset, { shouldDirty: true, shouldTouch: true });
+							setValue('scanProfile', 'lab', { shouldDirty: true, shouldTouch: true });
 							clearErrors('target');
 						}}
 					>

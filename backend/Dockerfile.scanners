@@ -1,0 +1,30 @@
+FROM golang:1.25-alpine AS scanner-tools
+
+RUN apk add --no-cache git
+
+RUN go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest \
+    && go install github.com/projectdiscovery/httpx/cmd/httpx@latest \
+    && go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
+
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app
+
+WORKDIR /app
+
+COPY --from=scanner-tools /go/bin/subfinder /usr/local/bin/subfinder
+COPY --from=scanner-tools /go/bin/httpx /usr/local/bin/httpx
+COPY --from=scanner-tools /go/bin/nuclei /usr/local/bin/nuclei
+
+RUN nuclei -update-templates
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY app ./app
+COPY alembic ./alembic
+COPY alembic.ini .
+
+EXPOSE 8000

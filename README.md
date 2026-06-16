@@ -111,6 +111,27 @@ ALLOWED_TARGET_DOMAINS=example.com,example.org
 
 Subdomains of allowlisted domains are accepted. Direct IP targets are still rejected by default.
 
+When `ENABLE_REAL_SCANNERS=true`, `ALLOWED_TARGET_DOMAINS` is required. An empty allowlist denies real scanner launches.
+
+Real scanner Docker runtime is available through an explicit compose override:
+
+```bash
+ALLOWED_TARGET_DOMAINS=example.com \
+ENABLE_REAL_SCANNERS=true \
+docker compose -f docker-compose.yml -f docker-compose.real-scanners.yml up --build
+```
+
+Use only domains you own or are explicitly authorized to assess. The default `docker compose up --build` path remains mock/demo mode.
+
+Scan profiles:
+
+- `discovery`: subdomain discovery and HTTP probing only.
+- `safe`: discovery, HTTP probing, and bounded Nuclei exposure/config checks with intrusive/DOS/fuzz tags excluded.
+- `lab`: local `LAB_MODE` targets only; does not run external scanner binaries.
+
+Discovery results are capped by `SCANNER_MAX_RESULTS` to keep early MVP scans bounded.
+Nuclei uses a small default starter pack in the scanner Docker image. Set `NUCLEI_TEMPLATES_PATH` to a comma-separated list of templates or template directories to override it.
+
 ## LAB_MODE
 
 `LAB_MODE=true` switches the backend into a safe demo-only path for `lab/` services. In this mode:

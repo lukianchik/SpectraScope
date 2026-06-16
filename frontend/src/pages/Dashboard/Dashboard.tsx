@@ -15,6 +15,7 @@ import {
 } from '../../shared/api/scans';
 import {
 	buildMetrics,
+	buildScanProgress,
 	buildScanSteps,
 	formatScanStatus,
 	formatStatusHeadline,
@@ -26,6 +27,7 @@ import styles from './Dashboard.module.scss';
 export function Dashboard() {
 	const queryClient = useQueryClient();
 	const [activeScanId, setActiveScanId] = useState<string | null>(null);
+	const [progressNow, setProgressNow] = useState(() => Date.now());
 
 	const scansQuery = useQuery({
 		queryKey: ['scans', { limit: 20 }],
@@ -68,6 +70,18 @@ export function Dashboard() {
 	const shouldPollCollections =
 		currentScan?.status === 'created' || currentScan?.status === 'running';
 
+	useEffect(() => {
+		if (!shouldPollCollections) {
+			return;
+		}
+
+		const intervalId = window.setInterval(() => {
+			setProgressNow(Date.now());
+		}, 1000);
+
+		return () => window.clearInterval(intervalId);
+	}, [shouldPollCollections]);
+
 	const assetsQuery = useQuery({
 		queryKey: ['scan-assets', activeScanId],
 		queryFn: () => getScanAssets(activeScanId!, { limit: 200, offset: 0 }),
@@ -93,7 +107,8 @@ export function Dashboard() {
 	const findings = findingsQuery.data?.items ?? [];
 	const report = reportQuery.data ?? null;
 	const metrics = buildMetrics(assets, findings, report);
-	const scanSteps = buildScanSteps(currentScan, assets, findings, report);
+	const scanProgress = buildScanProgress(currentScan, assets, findings, report, progressNow);
+	const scanSteps = buildScanSteps(currentScan, assets, findings, report, scanProgress.percent);
 	const activeQueueCount =
 		scansQuery.data?.items.filter((scan) => scan.status === 'created' || scan.status === 'running')
 			.length ?? 0;
@@ -144,13 +159,36 @@ export function Dashboard() {
 							</span>
 						</div>
 
+						<div className={styles.progressBlock}>
+							<div className={styles.progressHeader}>
+								<span>{scanProgress.label}</span>
+								<span>{scanProgress.percent}%</span>
+							</div>
+							<div
+								className={`${styles.progressTrack} ${
+									scanProgress.isActive ? styles.progressActive : ''
+								}`}
+								aria-label={`Scan progress ${scanProgress.percent}%`}
+							>
+								<span
+									className={styles.progressFill}
+									style={{ width: `${scanProgress.percent}%` }}
+								/>
+							</div>
+							<p className={styles.progressDetail}>{scanProgress.detail}</p>
+						</div>
+
 						<div className={styles.steps}>
 							{scanSteps.map((step, index) => (
 								<div key={step.title} className={styles.stepItem}>
 									<div className={styles.stepTrack}>
 										<span
 											className={`${styles.stepDot} ${
-												step.completed ? styles.stepDone : styles.stepPending
+												step.completed
+													? styles.stepDone
+													: step.active
+														? styles.stepActive
+														: styles.stepPending
 											}`}
 										>
 											{step.completed ? '✓' : index + 1}
