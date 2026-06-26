@@ -1,0 +1,214 @@
+.layout {
+        display: grid;
+        grid-template-columns: 320px minmax(0, 1fr);
+        gap: 18px;
+        align-items: start;
+}
+
+@media (max-width: 1100px) {
+        .layout { grid-template-columns: 1fr; }
+}
+
+.sidebar {
+        position: sticky;
+        top: 24px;
+        padding: 16px;
+        border-radius: 22px;
+        border: 1px solid var(--border);
+        background: var(--surface-glass);
+        backdrop-filter: blur(14px);
+}
+
+.sidebarHead {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 8px 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        margin-bottom: 8px;
+        font-family: var(--font-mono);
+        font-size: 0.74rem;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        color: var(--text-tertiary);
+}
+
+.list { display: grid; gap: 6px; padding: 0; margin: 0; list-style: none; }
+
+.listItem {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 1px solid transparent;
+        background: transparent;
+        transition: background 180ms ease, border-color 180ms ease, transform 180ms var(--ease-out);
+}
+
+.listItem:hover {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(255, 255, 255, 0.06);
+        transform: translateX(2px);
+}
+
+.listItemActive {
+        background: linear-gradient(135deg, rgba(79, 140, 255, 0.18), rgba(78, 224, 197, 0.1));
+        border-color: rgba(110, 200, 255, 0.32);
+}
+
+.target {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-primary);
+}
+
+.meta {
+        margin: 4px 0 0;
+        font-size: 0.78rem;
+        color: var(--text-tertiary);
+        font-family: var(--font-mono);
+}
+
+// Report
+.report {
+        padding: 32px;
+        border-radius: 28px;
+        border: 1px solid var(--border);
+        background:
+                radial-gradient(circle at 100% 0%, rgba(78, 224, 197, 0.1), transparent 50%),
+                var(--surface-glass);
+        backdrop-filter: blur(16px);
+        box-shadow: var(--shadow-lg);
+        min-height: 540px;
+        animation: fadeUp 540ms var(--ease-out);
+}
+
+.reportHead {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+        padding-bottom: 24px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        margin-bottom: 24px;
+}
+
+.eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin: 0 0 8px;
+        padding: 0.25rem 0.5rem;
+        border-radius: 999px;
+        background: rgba(78, 224, 197, 0.12);
+        color: var(--aqua-strong);
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.18em;
+}
+
+.h2 {
+        margin: 0;
+        font-family: var(--font-heading);
+        font-size: clamp(1.6rem, 3vw, 2.2rem);
+        font-weight: 700;
+        letter-spacing: -0.03em;
+}
+
+.subtle {
+        margin: 8px 0 0;
+        color: var(--text-tertiary);
+        font-family: var(--font-mono);
+        font-size: 0.84rem;
+}
+
+.section + .section { margin-top: 28px; }
+
+.section h3 {
+        margin: 0 0 14px;
+        font-family: var(--font-heading);
+        font-size: 1.05rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--text-primary);
+}
+
+.section p {
+        margin: 0;
+        color: var(--text-secondary);
+        line-height: 1.7;
+        font-size: 0.98rem;
+}
+
+.risks {
+        display: grid;
+        gap: 10px;
+        padding: 0;
+        margin: 0;
+        list-style: none;
+}
+
+.riskItem {
+        display: grid;
+        grid-template-columns: 36px 1fr 140px;
+        gap: 16px;
+        align-items: center;
+        padding: 14px 16px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.riskRank {
+        font-family: var(--font-mono);
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--aqua);
+}
+
+.riskName {
+        margin: 0;
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+}
+
+.riskMeta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 6px 0 0;
+        color: var(--text-tertiary);
+        font-family: var(--font-mono);
+        font-size: 0.82rem;
+}
+
+.scoreBar {
+        --score: 0%;
+        position: relative;
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        overflow: hidden;
+}
+
+.scoreBar span {
+        position: absolute;
+        inset: 0;
+        width: var(--score);
+        background: linear-gradient(90deg, #ff8e4c, #ff4f7a);
+        border-radius: 999px;
+}
+
+.recs {
+        margin: 0;
+        padding-left: 1.2rem;
+        display: grid;
+        gap: 10px;
+        color: var(--text-secondary);
+        line-height: 1.65;
+}

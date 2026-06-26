@@ -1,0 +1,28 @@
+{
+  "summary": "Frontend-only smoke + functional E2E completed against the public preview URL. All 11 features in the review request pass: Landing page renders hero/radar/features/pipeline/safety/CTA/footer; nav-launch routes to /dashboard; sidebar with active highlighting works on every internal route; Dashboard shows Mission Control header, tabs, overview-panel by default and switches to SVG line chart (Trends, 23 SVGs detected) and timeline (Activity); Scans page filters by status (all=7, completed=5) and by search 'lab'=3; Assets grid has 24 cards, Alive filter reduces to 20; Findings list shows 10 rows, clicking opens drawer, X closes it, Critical filter -> 3 rows; Reports lists 5 items, clicking updates right panel; Monitoring shows health-list with sparklines (22 SVGs); Integrations has 6 toggles that flip visual state on click; Settings save button updates 'Saved at' label. Demo banner is visible on every internal page (informational, not error-styled). Landing screenshot confirms beautiful navy+accent theme with radar, gradient hero, glassmorphism cards. No layout/contrast issues observed.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "client.ts hardcodes fallback API base 'http://localhost:8000' when VITE_API_BASE_URL is not set; consider failing fast or using a relative '/api' fallback so demo mode is the only path in preview (current behaviour still works because fetch throws and NetworkUnavailableError triggers demo fallback).",
+    "Integration toggles flip via class change but do not set aria-checked / data-state; adding aria-checked='true|false' on the toggle button would improve a11y and testability.",
+    "Sidebar generates data-testid via item.to.replace('/', '') which is fragile for nested routes; safe today since all routes are top-level."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "skipped (not requested)", "frontend": "100% (11/11 features)"},
+  "test_credentials": "n/a - app has no auth",
+  "seed_data_creation": "none; app uses built-in DEMO_* dataset because backend is unreachable in preview (intentional per request)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "App is a frontend-only Vite+React+TS app at the preview root. Backend (FastAPI:8001) is intentionally unreachable; demo fallback is triggered via NetworkUnavailableError in /app/frontend/src/shared/api/client.ts and demo banner [data-testid='demo-banner'] is shown on every internal page. Do NOT flag backend connection-refused console errors as bugs - they are how the demo path is reached. All data-testids present: nav-launch, hero-launch, cta-launch, sidebar, nav-{dashboard|scans|assets|findings|reports|monitoring|integrations|settings}, demo-banner, dashboard-tabs, tab-{overview|trends|activity}, overview-panel, scans-search, scans-tab-{all|running|completed|failed}, assets-grid, assets-search, finding-row-*, findings-tab-critical, report-item-*, health-list, toggle-* (6 items), settings-form, settings-save.",
+  "console_errors_observed": "Only repeated 'Failed to load resource: net::ERR_CONNECTION_REFUSED' from API calls to localhost:8000 - expected demo-mode trigger, NOT a bug per reviewer instructions. No JS pageerror exceptions, no React warnings.",
+  "rca of the issue": "n/a - no bugs found"
+}

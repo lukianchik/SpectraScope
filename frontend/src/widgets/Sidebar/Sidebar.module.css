@@ -1,204 +1,244 @@
 .sidebar {
-	display: flex;
-	flex-direction: column;
-	justify-content: space-between;
-	gap: 24px;
-	width: 290px;
-	padding: 28px 20px;
-	border-right: 1px solid var(--border);
-	background:
-		linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 28%),
-		rgba(6, 12, 23, 0.88);
-	backdrop-filter: blur(18px);
+        position: sticky;
+        top: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 24px;
+        width: 280px;
+        height: 100svh;
+        padding: 26px 18px;
+        border-right: 1px solid var(--border);
+        background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 28%),
+                rgba(6, 12, 23, 0.78);
+        backdrop-filter: blur(18px);
+        overflow-y: auto;
+}
+
+.sidebar::-webkit-scrollbar { width: 6px; }
+.sidebar::-webkit-scrollbar-thumb {
+        background: rgba(126, 160, 216, 0.18);
+        border-radius: 999px;
 }
 
 .brand {
-	display: flex;
-	align-items: center;
-	gap: 14px;
-	padding-bottom: 22px;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding-bottom: 22px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        transition: transform 220ms var(--ease-out);
 }
 
+.brand:hover { transform: translateX(2px); }
+
 .brandMark {
-	position: relative;
-	display: grid;
-	place-items: center;
-	width: 42px;
-	height: 42px;
-	border-radius: 14px;
-	background: linear-gradient(135deg, rgba(79, 140, 255, 0.9), rgba(46, 219, 171, 0.7));
-	box-shadow: 0 16px 34px rgba(54, 121, 255, 0.22);
+        position: relative;
+        display: grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, rgba(79, 140, 255, 0.95), rgba(78, 224, 197, 0.75));
+        box-shadow: 0 16px 34px rgba(54, 121, 255, 0.32);
+        animation: glowPulse 3.4s ease-in-out infinite;
 }
 
 .brandMark span {
-	position: absolute;
-	border-radius: 50%;
-	border: 2px solid rgba(255, 255, 255, 0.84);
+        position: absolute;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.86);
 }
-
-.brandMark span:first-child {
-	width: 20px;
-	height: 20px;
-}
-
-.brandMark span:last-child {
-	width: 10px;
-	height: 10px;
-}
+.brandMark span:first-child { width: 20px; height: 20px; }
+.brandMark span:last-child { width: 10px; height: 10px; }
 
 .brandName {
-	margin: 0;
-	font-family: var(--font-heading);
-	font-size: 1.25rem;
-	font-weight: 700;
-	letter-spacing: -0.04em;
-	color: var(--text-primary);
+        margin: 0;
+        font-family: var(--font-heading);
+        font-size: 1.25rem;
+        font-weight: 700;
+        letter-spacing: -0.04em;
+        color: var(--text-primary);
 }
 
 .brandCaption {
-	margin: 4px 0 0;
-	font-size: 0.84rem;
-	color: var(--text-tertiary);
+        margin: 4px 0 0;
+        font-size: 0.82rem;
+        color: var(--text-tertiary);
 }
 
 .nav {
-	display: grid;
-	gap: 8px;
-	margin-top: 24px;
+        display: grid;
+        gap: 6px;
+        margin-top: 22px;
 }
 
 .navItem {
-	display: grid;
-	grid-template-columns: 28px 1fr auto;
-	align-items: center;
-	gap: 12px;
-	width: 100%;
-	padding: 0.9rem 0.95rem;
-	border: 1px solid transparent;
-	border-radius: 18px;
-	background: transparent;
-	color: var(--text-secondary);
-	text-align: left;
-	transition:
-		background 160ms ease,
-		border-color 160ms ease,
-		color 160ms ease,
-		transform 160ms ease;
+        display: grid;
+        grid-template-columns: 28px 1fr auto;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        padding: 0.78rem 0.85rem;
+        border: 1px solid transparent;
+        border-radius: 16px;
+        background: transparent;
+        color: var(--text-secondary);
+        text-align: left;
+        text-decoration: none;
+        transition:
+                background 200ms ease,
+                border-color 200ms ease,
+                color 200ms ease,
+                transform 200ms var(--ease-out);
 }
 
 .navItem:hover {
-	background: rgba(255, 255, 255, 0.03);
-	border-color: rgba(255, 255, 255, 0.06);
-	color: var(--text-primary);
-	transform: translateX(2px);
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(255, 255, 255, 0.07);
+        color: var(--text-primary);
+        transform: translateX(3px);
 }
 
 .active {
-	background: linear-gradient(135deg, rgba(79, 140, 255, 0.18), rgba(79, 140, 255, 0.08));
-	border-color: rgba(79, 140, 255, 0.22);
-	color: var(--text-primary);
+        background: linear-gradient(135deg, rgba(79, 140, 255, 0.22), rgba(78, 224, 197, 0.1));
+        border-color: rgba(110, 200, 255, 0.32);
+        color: var(--text-primary);
+        box-shadow: inset 0 0 0 1px rgba(110, 200, 255, 0.12);
+}
+
+.active .navGlyph {
+        background: linear-gradient(135deg, rgba(79, 140, 255, 0.35), rgba(78, 224, 197, 0.2));
+        color: var(--aqua-strong);
 }
 
 .navGlyph {
-	display: grid;
-	place-items: center;
-	width: 28px;
-	height: 28px;
-	border-radius: 10px;
-	background: rgba(255, 255, 255, 0.06);
+        display: grid;
+        place-items: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text-secondary);
+        transition: background 200ms ease, color 200ms ease;
 }
 
-.navGlyph svg {
-	width: 16px;
-	height: 16px;
-}
+.navGlyph svg { width: 16px; height: 16px; }
 
 .navLabel {
-	font-size: 0.96rem;
-	font-weight: 500;
+        font-size: 0.95rem;
+        font-weight: 500;
 }
 
 .navCount {
-	padding: 0.25rem 0.55rem;
-	border-radius: 999px;
-	background: rgba(255, 255, 255, 0.06);
-	font-size: 0.78rem;
-	color: var(--text-tertiary);
+        padding: 0.22rem 0.5rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        font-family: var(--font-mono);
+        font-size: 0.74rem;
+        color: var(--text-tertiary);
+}
+
+.active .navCount {
+        background: rgba(78, 224, 197, 0.18);
+        color: var(--aqua-strong);
 }
 
 .footer {
-	display: grid;
-	gap: 18px;
+        display: grid;
+        gap: 14px;
 }
 
-.workspaceCard,
-.profile {
-	padding: 16px;
-	border-radius: 20px;
-	border: 1px solid rgba(255, 255, 255, 0.06);
-	background: rgba(255, 255, 255, 0.03);
+.systemCard {
+        display: grid;
+        gap: 10px;
+        padding: 14px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        background: rgba(255, 255, 255, 0.025);
 }
 
 .footerLabel {
-	margin: 0 0 10px;
-	font-size: 0.78rem;
-	letter-spacing: 0.16em;
-	text-transform: uppercase;
-	color: var(--text-tertiary);
+        margin: 0;
+        font-size: 0.7rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--text-tertiary);
 }
 
-.workspaceValue {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 12px;
-	font-weight: 600;
-	color: var(--text-primary);
+.systemRow {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 0.84rem;
+        color: var(--text-secondary);
 }
 
-.workspaceBadge {
-	padding: 0.3rem 0.55rem;
-	border-radius: 999px;
-	background: rgba(76, 211, 138, 0.14);
-	color: #9cebbd;
-	font-size: 0.78rem;
+.systemBadge {
+        padding: 0.22rem 0.55rem;
+        border-radius: 999px;
+        font-family: var(--font-mono);
+        font-size: 0.74rem;
+        background: rgba(76, 211, 138, 0.18);
+        color: #9cebbd;
+}
+
+.systemMuted {
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        color: var(--text-tertiary);
 }
 
 .profile {
-	display: flex;
-	align-items: center;
-	gap: 14px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        background: rgba(255, 255, 255, 0.025);
 }
 
 .avatar {
-	display: grid;
-	place-items: center;
-	width: 44px;
-	height: 44px;
-	border-radius: 14px;
-	background: linear-gradient(135deg, #4f8cff, #6ce0c0);
-	color: #04111f;
-	font-weight: 700;
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #4f8cff, #6ce0c0);
+        color: #04111f;
+        font-weight: 800;
 }
 
 .profileName {
-	margin: 0;
-	font-weight: 600;
-	color: var(--text-primary);
+        margin: 0;
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 0.9rem;
 }
 
 .profileRole {
-	margin: 4px 0 0;
-	font-size: 0.84rem;
-	color: var(--text-tertiary);
+        margin: 3px 0 0;
+        font-size: 0.78rem;
+        color: var(--text-tertiary);
 }
 
 @media (max-width: 1100px) {
-	.sidebar {
-		width: 100%;
-		padding: 20px;
-		border-right: none;
-		border-bottom: 1px solid var(--border);
-	}
+        .sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+                padding: 18px;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+        }
+        .nav { grid-template-columns: repeat(4, 1fr); }
+        .navItem { grid-template-columns: 28px 1fr; }
+        .navCount { display: none; }
+        .footer { display: none; }
+}
+
+@media (max-width: 640px) {
+        .nav { grid-template-columns: repeat(2, 1fr); }
 }

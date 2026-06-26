@@ -1,0 +1,57 @@
+.cursor {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--aqua);
+        box-shadow: 0 0 18px rgba(78, 224, 197, 0.85);
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        z-index: 9999;
+        mix-blend-mode: screen;
+        transition:
+                width 180ms var(--ease-spring),
+                height 180ms var(--ease-spring),
+                background 200ms ease;
+}
+
+.ring {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 38px;
+        height: 38px;
+        border: 1.5px solid rgba(78, 224, 197, 0.45);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        z-index: 9998;
+        transition:
+                width 240ms var(--ease-spring),
+                height 240ms var(--ease-spring),
+                border-color 240ms ease,
+                opacity 200ms ease;
+}
+
+.cursor[data-hover='true'] {
+        width: 6px;
+        height: 6px;
+        background: var(--accent-strong);
+}
+
+.ring[data-hover='true'] {
+        width: 56px;
+        height: 56px;
+        border-color: rgba(142, 197, 255, 0.7);
+}
+
+.cursor[data-click='true'] {
+        width: 18px;
+        height: 18px;
+}
+
+@media (pointer: coarse) {
+        .cursor, .ring { display: none; }
+}

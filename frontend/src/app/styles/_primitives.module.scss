@@ -1,0 +1,99 @@
+// Reusable page primitives shared across internal pages
+
+.card {
+        position: relative;
+        padding: 24px;
+        border-radius: 24px;
+        border: 1px solid var(--border);
+        background:
+                linear-gradient(160deg, rgba(255, 255, 255, 0.03), transparent 50%),
+                var(--surface-glass);
+        backdrop-filter: blur(14px);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+}
+
+.cardHeader {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 18px;
+}
+
+.cardEyebrow {
+        margin: 0 0 6px;
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--aqua);
+}
+
+.cardTitle {
+        margin: 0;
+        font-family: var(--font-heading);
+        font-size: 1.2rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+}
+
+.cardSubtitle {
+        margin: 8px 0 0;
+        color: var(--text-secondary);
+        font-size: 0.92rem;
+        line-height: 1.6;
+}
+
+// Severity color tokens
+.sev_critical { background: rgba(255, 79, 122, 0.16); color: #ffb1c5; border: 1px solid rgba(255, 79, 122, 0.32); }
+.sev_high     { background: rgba(255, 142, 76, 0.16); color: #ffc295; border: 1px solid rgba(255, 142, 76, 0.32); }
+.sev_medium   { background: rgba(255, 179, 71, 0.16); color: #ffd59d; border: 1px solid rgba(255, 179, 71, 0.32); }
+.sev_low      { background: rgba(126, 160, 216, 0.16); color: #bfd3ff; border: 1px solid rgba(126, 160, 216, 0.32); }
+.sev_info     { background: rgba(126, 160, 216, 0.12); color: #a4b6d6; border: 1px solid rgba(126, 160, 216, 0.24); }
+
+.badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.32rem 0.6rem;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-family: var(--font-mono);
+}
+
+.status_completed, .status_completedDot { color: #9cebbd; }
+.status_running   { color: #b5d4ff; }
+.status_failed    { color: #ffb1b1; }
+.status_created   { color: #c9d5ee; }
+
+.statusPill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0.3rem 0.65rem;
+        border-radius: 999px;
+        font-family: var(--font-mono);
+        font-size: 0.74rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-weight: 600;
+}
+
+.statusPill.completed { background: rgba(76, 211, 138, 0.16); color: #9cebbd; }
+.statusPill.running   { background: rgba(79, 140, 255, 0.16); color: #b5d4ff; }
+.statusPill.failed    { background: rgba(255, 98, 98, 0.16); color: #ffb1b1; }
+.statusPill.created   { background: rgba(126, 160, 216, 0.16); color: #c9d5ee; }
+
+.statusPill .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: currentColor;
+        box-shadow: 0 0 8px currentColor;
+}
+
+.statusPill.running .dot { animation: blink 1.4s infinite; }

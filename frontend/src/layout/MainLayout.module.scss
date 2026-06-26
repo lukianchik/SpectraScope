@@ -1,0 +1,60 @@
+.layout {
+        position: relative;
+        display: grid;
+        grid-template-columns: 280px minmax(0, 1fr);
+        min-height: 100svh;
+        gap: 0;
+}
+
+.main {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 26px;
+        padding: 32px clamp(20px, 3vw, 44px) 56px;
+        min-width: 0;
+        animation: fadeIn 360ms var(--ease-out);
+}
+
+.demoBanner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 18px;
+        border-radius: 14px;
+        border: 1px solid rgba(78, 224, 197, 0.28);
+        background: linear-gradient(90deg, rgba(78, 224, 197, 0.08), rgba(79, 140, 255, 0.04));
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        backdrop-filter: blur(10px);
+}
+
+.demoBanner strong {
+        color: var(--aqua-strong);
+        font-family: var(--font-mono);
+        letter-spacing: 0.04em;
+}
+
+.demoBanner .dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--aqua);
+        margin-right: 8px;
+        animation: blink 1.6s ease-in-out infinite;
+        box-shadow: 0 0 10px var(--aqua-glow);
+}
+
+@media (max-width: 1100px) {
+        .layout {
+                grid-template-columns: 1fr;
+        }
+}
+
+@media (max-width: 640px) {
+        .main {
+                padding: 18px 16px 32px;
+        }
+}

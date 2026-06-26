@@ -1,0 +1,95 @@
+.bg {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        overflow: hidden;
+}
+
+.aurora {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(120px);
+        opacity: 0.55;
+        animation: float 12s ease-in-out infinite;
+}
+
+.aurora1 {
+        top: -10%;
+        left: -8%;
+        width: 540px;
+        height: 540px;
+        background: radial-gradient(circle, rgba(79, 140, 255, 0.55), transparent 65%);
+        animation-delay: 0s;
+}
+
+.aurora2 {
+        bottom: -20%;
+        right: -8%;
+        width: 620px;
+        height: 620px;
+        background: radial-gradient(circle, rgba(78, 224, 197, 0.45), transparent 65%);
+        animation-delay: 3s;
+}
+
+.aurora3 {
+        top: 30%;
+        right: 22%;
+        width: 380px;
+        height: 380px;
+        background: radial-gradient(circle, rgba(120, 90, 255, 0.35), transparent 65%);
+        animation-delay: 6s;
+}
+
+.radarHalo {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 1400px;
+        height: 1400px;
+        margin: -700px 0 0 -700px;
+        border-radius: 50%;
+        opacity: 0.22;
+        background:
+                conic-gradient(
+                        from 0deg,
+                        transparent 0deg,
+                        rgba(78, 224, 197, 0.55) 30deg,
+                        transparent 60deg,
+                        transparent 360deg
+                );
+        animation: radarSweep 22s linear infinite;
+        mask: radial-gradient(circle, transparent 24%, black 25%, black 60%, transparent 62%);
+}
+
+.rings {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 1200px;
+        height: 1200px;
+        opacity: 0.35;
+        pointer-events: none;
+}
+
+.rings circle {
+        fill: none;
+        stroke: rgba(110, 200, 255, 0.18);
+}
+
+.scanLine {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+                180deg,
+                transparent,
+                rgba(78, 224, 197, 0.08) 48%,
+                rgba(78, 224, 197, 0.22) 50%,
+                rgba(78, 224, 197, 0.08) 52%,
+                transparent
+        );
+        height: 220px;
+        animation: scanLine 9s linear infinite;
+        opacity: 0.4;
+}
