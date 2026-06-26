@@ -13,3 +13,9 @@ node_modules/
 backend/*.db
 backend/*.db-*
 backend/write_test.txt
+.env.*
+*.env
+credentials.json
+*.pem
+*.key
+.credentials
