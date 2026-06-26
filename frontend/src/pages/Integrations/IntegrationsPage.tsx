@@ -47,7 +47,10 @@ export function IntegrationsPage() {
                                                                         type="button"
                                                                         className={`${own.toggle} ${enabled ? own.toggleOn : ''}`}
                                                                         onClick={() => toggle(i.name)}
-                                                                        aria-pressed={enabled}
+                                                                        role="switch"
+                                                                        aria-checked={enabled}
+                                                                        aria-label={`${i.name} integration`}
+                                                                        data-state={enabled ? 'on' : 'off'}
                                                                         data-testid={`toggle-${i.name}`}
                                                                 >
                                                                         <span className={own.toggleDot} />
