@@ -1,0 +1,23 @@
+id: spectrascope-exposed-admin-panel-demo
+
+info:
+  name: Exposed Admin Panel Demo
+  author: spectrascope
+  severity: high
+  description: Detects the isolated SpectraScope admin panel by its lab marker.
+  tags: spectrascope,lab,demo
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/"
+    matchers-condition: and
+    matchers:
+      - type: word
+        part: header
+        words:
+          - "X-Spectra-Finding: exposed-admin-panel"
+      - type: word
+        part: body
+        words:
+          - "Internal Administration Portal"

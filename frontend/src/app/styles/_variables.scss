@@ -1,0 +1,83 @@
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+        // Base palette - navy noir with luminous accent
+        --bg: #050b18;
+        --bg-deep: #03060f;
+        --bg-glow: rgba(60, 130, 255, 0.35);
+        --bg-aurora: rgba(106, 235, 198, 0.18);
+        --bg-violet: rgba(120, 90, 255, 0.18);
+
+        --surface: rgba(13, 24, 44, 0.78);
+        --surface-strong: rgba(17, 31, 56, 0.95);
+        --surface-soft: rgba(11, 20, 38, 0.6);
+        --surface-hover: rgba(22, 39, 70, 0.92);
+        --surface-glass: rgba(20, 34, 60, 0.42);
+
+        --border: rgba(120, 152, 205, 0.16);
+        --border-strong: rgba(120, 152, 205, 0.32);
+        --border-glow: rgba(110, 200, 255, 0.34);
+
+        --text-primary: #f3f7ff;
+        --text-secondary: #a4b6d6;
+        --text-tertiary: #6e7f9c;
+        --text-muted: #4f607c;
+
+        // Brand accents
+        --accent: #4f8cff;
+        --accent-strong: #8ec5ff;
+        --accent-glow: rgba(79, 140, 255, 0.55);
+        --aqua: #4ee0c5;
+        --aqua-strong: #8dffe7;
+        --aqua-glow: rgba(78, 224, 197, 0.45);
+		--mode-accent: var(--aqua);
+
+        // Status
+        --success: #4cd38a;
+        --warning: #ffb347;
+        --danger: #ff6262;
+        --critical: #ff4f7a;
+        --info: #7ea0d8;
+
+        // Surface effects
+        --ring-track: rgba(255, 255, 255, 0.08);
+        --shadow-xl: 0 32px 90px rgba(2, 8, 20, 0.6);
+        --shadow-lg: 0 26px 70px rgba(2, 8, 20, 0.48);
+        --shadow-md: 0 18px 40px rgba(4, 9, 20, 0.32);
+        --shadow-glow: 0 0 32px rgba(79, 140, 255, 0.32);
+        --shadow-glow-aqua: 0 0 28px rgba(78, 224, 197, 0.28);
+
+        // Typography
+        --font-body: 'Outfit', 'Segoe UI Variable Text', system-ui, sans-serif;
+        --font-heading: 'Bricolage Grotesque', 'Segoe UI Variable Display', sans-serif;
+        --font-mono: 'JetBrains Mono', 'Cascadia Code', monospace;
+
+        // Motion
+        --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+        --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+:root[data-mode='adversary'] {
+	--bg: #09070d;
+	--bg-deep: #040409;
+	--bg-glow: rgba(213, 24, 52, 0.24);
+	--bg-aurora: rgba(255, 70, 60, 0.1);
+	--bg-violet: rgba(116, 20, 39, 0.16);
+	--surface: rgba(17, 14, 23, 0.86);
+	--surface-strong: rgba(25, 18, 29, 0.96);
+	--surface-soft: rgba(19, 14, 23, 0.7);
+	--surface-hover: rgba(43, 22, 31, 0.94);
+	--surface-glass: rgba(26, 17, 28, 0.54);
+	--border: rgba(255, 110, 128, 0.15);
+	--border-strong: rgba(255, 92, 113, 0.3);
+	--border-glow: rgba(255, 53, 79, 0.48);
+	--accent: #e72443;
+	--accent-strong: #ff8b99;
+	--accent-glow: rgba(231, 36, 67, 0.52);
+	--aqua: #ff405b;
+	--aqua-strong: #ff93a1;
+	--aqua-glow: rgba(255, 45, 74, 0.44);
+	--mode-accent: #ff334f;
+	--shadow-glow: 0 0 32px rgba(231, 36, 67, 0.28);
+	--shadow-glow-aqua: 0 0 28px rgba(255, 45, 74, 0.22);
+}

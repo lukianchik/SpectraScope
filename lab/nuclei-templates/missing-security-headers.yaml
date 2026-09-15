@@ -1,0 +1,19 @@
+id: spectrascope-missing-security-headers-demo
+
+info:
+  name: Missing Browser Security Headers
+  author: spectrascope
+  severity: low
+  description: Detects an isolated lab response without a Content-Security-Policy header.
+  tags: spectrascope,lab,demo
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/"
+    matchers:
+      - type: word
+        part: header
+        words:
+          - "Content-Security-Policy:"
+        negative: true

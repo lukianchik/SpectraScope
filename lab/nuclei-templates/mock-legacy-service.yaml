@@ -1,0 +1,23 @@
+id: spectrascope-legacy-service-demo
+
+info:
+  name: Legacy Service Demo
+  author: spectrascope
+  severity: medium
+  description: Detects the local SpectraScope mock legacy service by its demo marker header.
+  tags: spectrascope,lab,demo
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/"
+    matchers-condition: and
+    matchers:
+      - type: word
+        part: header
+        words:
+          - "X-Spectra-Finding: legacy-service"
+      - type: word
+        part: body
+        words:
+          - "Legacy Service"

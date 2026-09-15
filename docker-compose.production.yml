@@ -1,0 +1,52 @@
+services:
+  backend:
+    ports: !reset []
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  worker:
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:size=256m,noexec,nosuid
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  frontend:
+    ports: !override
+      - "${SPECTRASCOPE_HTTP_BIND:-127.0.0.1:3000}:8080"
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,noexec,nosuid
+      - /var/cache/nginx:size=32m,noexec,nosuid
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  postgres:
+    ports: !reset []
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+
+  redis:
+    ports: !reset []
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--save", "60", "1000"]
+    volumes:
+      - redis_data:/data
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  redis_data:

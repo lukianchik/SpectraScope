@@ -1,0 +1,54 @@
+name: Scanner image
+
+on:
+  pull_request:
+    paths:
+      - "backend/Dockerfile.scanners"
+      - "backend/scanner-templates/**"
+      - "backend/app/scanners/**"
+      - "docker-compose.local-real.yml"
+      - "lab/**"
+      - ".github/workflows/scanner-image.yml"
+  push:
+    branches: [main]
+    paths:
+      - "backend/Dockerfile.scanners"
+      - "backend/scanner-templates/**"
+      - "backend/app/scanners/**"
+      - "docker-compose.local-real.yml"
+      - "lab/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build pinned scanner image
+        run: docker build -f backend/Dockerfile.scanners -t spectrascope-scanners:test backend
+      - name: Verify scanner binaries
+        run: |
+          docker run --rm spectrascope-scanners:test subfinder -version
+          docker run --rm spectrascope-scanners:test httpx -version
+          docker run --rm spectrascope-scanners:test nuclei -version
+          docker run --rm spectrascope-scanners:test nmap --version
+      - name: Verify scanners against the isolated lab
+        run: |
+          docker compose -f lab/docker-compose.yml up -d --build
+          LAB_IP="$(docker inspect spectrascope-lab-proxy --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')"
+          docker run --rm --network spectrascope-lab spectrascope-scanners:test \
+            httpx -u "http://${LAB_IP}:8088" -H "Host: admin.lab.local" -json -silent -status-code \
+            | tee /tmp/httpx.jsonl
+          grep -q '"status_code":200' /tmp/httpx.jsonl
+          docker run --rm --network spectrascope-lab spectrascope-scanners:test \
+            nuclei -u "http://${LAB_IP}:8088" -H "Host: admin.lab.local" -jsonl -silent \
+            -t /opt/spectrascope/templates -exclude-tags intrusive,dos,fuzz \
+            | tee /tmp/nuclei.jsonl
+          grep -q 'spectrascope-exposed-admin-panel-demo' /tmp/nuclei.jsonl
+      - name: Dump lab logs on failure
+        if: failure()
+        run: docker compose -f lab/docker-compose.yml logs --no-color

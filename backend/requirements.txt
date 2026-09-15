@@ -1,0 +1,14 @@
+alembic==1.13.2
+celery==5.4.0
+cryptography==50.0.0
+defusedxml==0.7.1
+fastapi==0.141.1
+psycopg2-binary==2.9.12
+pydantic==2.9.2
+pydantic-settings==2.5.2
+prometheus-client==0.21.0
+python-dotenv==1.2.3
+redis==5.0.8
+SQLAlchemy==2.0.35
+uvicorn[standard]==0.30.6
+starlette==1.6.0

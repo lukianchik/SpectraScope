@@ -1,0 +1,39 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.scanners
+    environment:
+      ENABLE_REAL_SCANNERS: "true"
+      LOCAL_REAL_SCANNERS: "true"
+      LAB_MODE: "false"
+      ENABLE_NMAP: "false"
+      ALLOWED_LAB_TARGETS: ${ALLOWED_LAB_TARGETS:-admin.lab.local:8088,legacy.lab.local:8088,files.lab.local:8088}
+      LOCAL_REAL_SCOPE_TARGET: ${LOCAL_REAL_SCOPE_TARGET:-perimeter.lab.local:8088}
+      NUCLEI_TEMPLATES_PATH: /opt/spectrascope/templates
+      SCANNER_TIMEOUT_SECONDS: ${SCANNER_TIMEOUT_SECONDS:-120}
+    networks:
+      - default
+      - local_lab
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.scanners
+    environment:
+      ENABLE_REAL_SCANNERS: "true"
+      LOCAL_REAL_SCANNERS: "true"
+      LAB_MODE: "false"
+      ENABLE_NMAP: "false"
+      ALLOWED_LAB_TARGETS: ${ALLOWED_LAB_TARGETS:-admin.lab.local:8088,legacy.lab.local:8088,files.lab.local:8088}
+      LOCAL_REAL_SCOPE_TARGET: ${LOCAL_REAL_SCOPE_TARGET:-perimeter.lab.local:8088}
+      NUCLEI_TEMPLATES_PATH: /opt/spectrascope/templates
+      SCANNER_TIMEOUT_SECONDS: ${SCANNER_TIMEOUT_SECONDS:-120}
+    networks:
+      - default
+      - local_lab
+
+networks:
+  local_lab:
+    external: true
+    name: spectrascope-lab

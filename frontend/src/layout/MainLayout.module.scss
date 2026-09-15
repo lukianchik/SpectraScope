@@ -1,0 +1,84 @@
+.layout {
+        position: relative;
+        display: grid;
+        grid-template-columns: 280px minmax(0, 1fr);
+        min-height: 100svh;
+        gap: 0;
+}
+
+.main {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 26px;
+        padding: 32px clamp(20px, 3vw, 44px) 56px;
+        min-width: 0;
+        overflow-x: hidden;
+        animation: fadeIn 360ms var(--ease-out);
+}
+
+.demoBanner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 18px;
+        border-radius: 14px;
+        border: 1px solid rgba(78, 224, 197, 0.28);
+        background: linear-gradient(90deg, rgba(78, 224, 197, 0.08), rgba(79, 140, 255, 0.04));
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        backdrop-filter: blur(10px);
+}
+
+.demoBanner strong {
+        color: var(--aqua-strong);
+        font-family: var(--font-mono);
+        letter-spacing: 0.04em;
+}
+
+.demoBanner .dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--aqua);
+        margin-right: 8px;
+        animation: blink 1.6s ease-in-out infinite;
+        box-shadow: 0 0 10px var(--aqua-glow);
+}
+
+@media (max-width: 1100px) {
+        .layout {
+                grid-template-columns: minmax(0, 1fr);
+                width: 100%;
+                overflow: hidden;
+        }
+
+        .main {
+                width: 100%;
+                max-width: 100%;
+        }
+}
+
+.utilityBar { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 14px; min-height: 36px; margin-bottom: -8px; }
+.utilityBar > :last-child { grid-column: 3; justify-self: end; }
+.sessionActions { display: flex; align-items: center; gap: 10px; }
+.sessionActions > button { padding: 7px 10px; color: var(--text-secondary); border: 1px solid var(--border); border-radius: 7px; background: rgba(8, 17, 38, 0.6); cursor: pointer; }
+.sessionActions > button:hover { color: var(--text-primary); border-color: var(--border-strong); }
+.sessionActions > button:disabled { opacity: 0.55; cursor: wait; }
+.adversaryNotice { grid-column: 2; display: inline-flex; align-items: center; justify-content: center; gap: 10px; max-width: 760px; min-width: 0; padding: 8px 13px; border: 1px solid rgba(255, 54, 80, 0.42); border-radius: 5px; background: rgba(255, 35, 63, 0.08); color: #ff7386; text-align: left; }
+.adversaryNotice > span { display: grid; gap: 1px; min-width: 0; }
+.adversaryNotice strong { font: 600 0.66rem var(--font-mono); letter-spacing: 0.13em; }
+.adversaryNotice small { color: var(--text-secondary); font-size: 0.72rem; overflow-wrap: anywhere; }
+
+@media (max-width: 640px) {
+        .main {
+                padding: 18px 16px 32px;
+        }
+
+		.utilityBar { grid-template-columns: minmax(0, 1fr) auto; align-items: start; margin-bottom: 0; }
+		.utilityBar > :last-child { grid-column: 2; grid-row: 1; }
+		.adversaryNotice { grid-column: 1 / -1; grid-row: 2; width: 100%; }
+		.utilityBar:not(.utilityBarActive) > span { display: none; }
+}

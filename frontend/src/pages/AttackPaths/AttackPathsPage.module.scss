@@ -1,0 +1,42 @@
+.simulationBadge { display: inline-flex; align-items: center; gap: 7px; padding: 8px 11px; border: 1px solid rgba(255, 65, 86, 0.4); border-radius: 4px; color: #ff8292; background: rgba(255, 32, 61, 0.08); font: 600 0.72rem var(--font-mono); text-transform: uppercase; }
+.commandBar { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--border); border-radius: 6px; background: var(--surface-soft); overflow: hidden; }
+.commandBar > div { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 14px 16px; border-right: 1px solid var(--border); color: var(--mode-accent); }
+.commandBar > div:last-child { border-right: 0; }
+.commandBar span { min-width: 0; color: var(--text-secondary); font-size: 0.82rem; overflow-wrap: anywhere; }
+.commandBar strong { color: var(--text-primary); }
+.commandBar .aiOff { color: var(--text-tertiary); }
+.workspace { display: grid; grid-template-columns: minmax(0, 1fr) 310px; align-items: start; gap: 18px; }
+.pathPanel, .intelPanel, .empty { border: 1px solid var(--border); border-radius: 6px; background: var(--surface); }
+.pathPanel { padding: clamp(18px, 2.4vw, 28px); }
+.sectionHeading { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+.sectionHeading p, .panelKicker { margin: 0 0 6px; color: var(--mode-accent); font: 600 0.68rem var(--font-mono); letter-spacing: 0.16em; text-transform: uppercase; }
+.sectionHeading h2, .intelPanel h2 { margin: 0; font: 700 1.25rem var(--font-heading); }
+.sectionHeading > span { color: var(--text-tertiary); font: 0.75rem var(--font-mono); overflow-wrap: anywhere; }
+.pathList { display: grid; margin: 0; padding: 24px 0 0; list-style: none; }
+.pathList > li { display: grid; grid-template-columns: 52px minmax(0, 1fr); min-width: 0; }
+.rail { position: relative; display: flex; justify-content: flex-start; }
+.rail::after { content: ''; position: absolute; top: 34px; bottom: 0; left: 15px; width: 1px; background: rgba(255, 60, 83, 0.32); }
+.pathList > li:last-child .rail::after { display: none; }
+.rail span { z-index: 1; display: grid; place-items: center; width: 31px; height: 31px; border: 1px solid var(--mode-accent); border-radius: 50%; background: #100a11; color: var(--mode-accent); font: 600 0.68rem var(--font-mono); }
+.pathList article { min-width: 0; margin-bottom: 18px; padding: 16px; border: 1px solid var(--border); border-left: 3px solid var(--mode-accent); border-radius: 4px; background: rgba(255, 255, 255, 0.018); }
+.pathList article header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.pathList article header p { margin: 0 0 4px; color: var(--text-tertiary); font: 0.65rem var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; }
+.pathList h3 { margin: 0; font-size: 1rem; overflow-wrap: anywhere; }
+.severity { flex: 0 0 auto; padding: 4px 7px; border-radius: 3px; font: 600 0.62rem var(--font-mono); text-transform: uppercase; }
+.context { color: #bac7db; background: rgba(186, 199, 219, 0.1); }.critical { color: #ff6c81; background: rgba(255, 45, 76, 0.14); }.high { color: #ff9b72; background: rgba(255, 117, 70, 0.14); }.medium { color: #ffcc72; background: rgba(255, 184, 70, 0.14); }.low, .info { color: #9fb3d5; background: rgba(159, 179, 213, 0.1); }
+.stepGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+.stepGrid > div { min-width: 0; padding-top: 10px; border-top: 1px solid var(--border); }
+.stepGrid span { color: var(--text-tertiary); font: 0.64rem var(--font-mono); text-transform: uppercase; }
+.stepGrid p { margin: 6px 0 0; color: var(--text-secondary); font-size: 0.82rem; line-height: 1.45; overflow-wrap: anywhere; }
+.pathList button { display: inline-flex; align-items: center; gap: 7px; margin-top: 14px; padding: 7px 9px; border: 1px solid var(--border-strong); border-radius: 4px; background: transparent; color: var(--text-secondary); font-size: 0.75rem; }
+.pathList button:hover, .pathList .approved { border-color: var(--mode-accent); color: #ff9ba8; }
+.reviewed article { border-left-color: #50d795; }
+.intelPanel { position: sticky; top: 24px; padding: 22px; }
+.intelPanel dl { display: grid; gap: 0; margin: 20px 0; }
+.intelPanel dl div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.intelPanel dt { color: var(--text-tertiary); font-size: 0.78rem; }.intelPanel dd { margin: 0; color: var(--text-primary); font: 0.74rem var(--font-mono); text-align: right; overflow-wrap: anywhere; }
+.intelGroup { margin-top: 20px; }.intelGroup h3 { margin: 0 0 9px; font-size: 0.78rem; color: var(--text-secondary); }.intelGroup > div { display: flex; flex-wrap: wrap; gap: 6px; }.intelGroup span { padding: 5px 7px; border: 1px solid var(--border); border-radius: 3px; color: #ff91a0; background: rgba(255, 42, 70, 0.06); font: 0.68rem var(--font-mono); }.intelGroup em { color: var(--text-tertiary); font-size: 0.78rem; }
+.guardrail { display: grid; grid-template-columns: 20px 1fr; gap: 10px; margin-top: 24px; padding: 13px; border-left: 2px solid var(--mode-accent); background: rgba(255, 40, 68, 0.06); color: var(--mode-accent); }.guardrail p { margin: 0; color: var(--text-secondary); font-size: 0.76rem; line-height: 1.45; }.guardrail strong { color: var(--text-primary); }
+.empty { display: grid; justify-items: center; gap: 8px; padding: 50px 20px; text-align: center; color: var(--text-tertiary); }.empty h2, .empty p { margin: 0; }
+@media (max-width: 1050px) { .workspace { grid-template-columns: 1fr; }.intelPanel { position: static; }.commandBar { grid-template-columns: repeat(2, 1fr); }.commandBar > div:nth-child(2) { border-right: 0; }.commandBar > div:nth-child(-n+2) { border-bottom: 1px solid var(--border); } }
+@media (max-width: 700px) { .stepGrid { grid-template-columns: 1fr; }.sectionHeading { align-items: flex-start; flex-direction: column; }.pathList > li { grid-template-columns: 38px minmax(0, 1fr); }.commandBar { grid-template-columns: 1fr; }.commandBar > div { border-right: 0; border-bottom: 1px solid var(--border); }.commandBar > div:last-child { border-bottom: 0; } }

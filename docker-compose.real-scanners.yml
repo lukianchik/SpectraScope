@@ -1,0 +1,28 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.scanners
+    environment:
+      ENABLE_REAL_SCANNERS: "true"
+      LOCAL_REAL_SCANNERS: "false"
+      ENABLE_NMAP: "false"
+      ALLOW_BENCHMARK_DNS_PROXY: ${ALLOW_BENCHMARK_DNS_PROXY:-false}
+      LAB_MODE: "false"
+      ALLOWED_TARGET_DOMAINS: ${ALLOWED_TARGET_DOMAINS:?Set ALLOWED_TARGET_DOMAINS for real scanner mode}
+      SCANNER_TIMEOUT_SECONDS: ${SCANNER_TIMEOUT_SECONDS:-120}
+      NUCLEI_TEMPLATES_PATH: ${NUCLEI_TEMPLATES_PATH:-/opt/spectrascope/templates}
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.scanners
+    environment:
+      ENABLE_REAL_SCANNERS: "true"
+      LOCAL_REAL_SCANNERS: "false"
+      ENABLE_NMAP: "false"
+      ALLOW_BENCHMARK_DNS_PROXY: ${ALLOW_BENCHMARK_DNS_PROXY:-false}
+      LAB_MODE: "false"
+      ALLOWED_TARGET_DOMAINS: ${ALLOWED_TARGET_DOMAINS:?Set ALLOWED_TARGET_DOMAINS for real scanner mode}
+      SCANNER_TIMEOUT_SECONDS: ${SCANNER_TIMEOUT_SECONDS:-120}
+      NUCLEI_TEMPLATES_PATH: ${NUCLEI_TEMPLATES_PATH:-/opt/spectrascope/templates}

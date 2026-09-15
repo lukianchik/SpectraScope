@@ -1,0 +1,129 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    environment:
+      SERVICE_NAME: ${SERVICE_NAME:-spectrascope-backend}
+      APP_ENV: ${APP_ENV:-dev}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      LOG_FORMAT: ${LOG_FORMAT:-json}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
+      AUTH_REQUIRED: ${AUTH_REQUIRED:-false}
+      AUTH_USERNAME: ${AUTH_USERNAME:-admin}
+      AUTH_PASSWORD_HASH: ${AUTH_PASSWORD_HASH:-}
+      SESSION_SECRET: ${SESSION_SECRET:-}
+      SESSION_TTL_SECONDS: ${SESSION_TTL_SECONDS:-28800}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
+      INTEGRATION_SECRET_KEY: ${INTEGRATION_SECRET_KEY:-local-development-integration-key-change-me}
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg2://spectrascope:spectrascope@postgres:5432/spectrascope}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/1}
+      CELERY_TASK_ALWAYS_EAGER: ${CELERY_TASK_ALWAYS_EAGER:-false}
+      ENABLE_REAL_SCANNERS: ${ENABLE_REAL_SCANNERS:-false}
+      LOCAL_REAL_SCANNERS: ${LOCAL_REAL_SCANNERS:-false}
+      ENABLE_NMAP: ${ENABLE_NMAP:-false}
+      SCANNER_TIMEOUT_SECONDS: ${SCANNER_TIMEOUT_SECONDS:-60}
+      SCANNER_MAX_RESULTS: ${SCANNER_MAX_RESULTS:-200}
+      SCAN_STALE_AFTER_SECONDS: ${SCAN_STALE_AFTER_SECONDS:-1800}
+      NUCLEI_TEMPLATES_PATH: ${NUCLEI_TEMPLATES_PATH:-}
+      LAB_MODE: ${LAB_MODE:-false}
+      ALLOWED_TARGET_DOMAINS: ${ALLOWED_TARGET_DOMAINS:-}
+      ALLOWED_LAB_TARGETS: ${ALLOWED_LAB_TARGETS:-admin.lab.local:8088,legacy.lab.local:8088,files.lab.local:8088}
+      LOCAL_REAL_SCOPE_TARGET: ${LOCAL_REAL_SCOPE_TARGET:-perimeter.lab.local:8088}
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=2).read()"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: ./backend
+    command: celery -A app.workers.celery_app:celery_app worker -Q scans --loglevel=INFO
+    environment:
+      SERVICE_NAME: ${SERVICE_NAME:-spectrascope-worker}
+      APP_ENV: ${APP_ENV:-dev}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      LOG_FORMAT: ${LOG_FORMAT:-json}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
+      AUTH_REQUIRED: ${AUTH_REQUIRED:-false}
+      AUTH_USERNAME: ${AUTH_USERNAME:-admin}
+      AUTH_PASSWORD_HASH: ${AUTH_PASSWORD_HASH:-}
+      SESSION_SECRET: ${SESSION_SECRET:-}
+      SESSION_TTL_SECONDS: ${SESSION_TTL_SECONDS:-28800}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
+      INTEGRATION_SECRET_KEY: ${INTEGRATION_SECRET_KEY:-local-development-integration-key-change-me}
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg2://spectrascope:spectrascope@postgres:5432/spectrascope}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/1}
+      CELERY_TASK_ALWAYS_EAGER: ${CELERY_TASK_ALWAYS_EAGER:-false}
+      ENABLE_REAL_SCANNERS: ${ENABLE_REAL_SCANNERS:-false}
+      LOCAL_REAL_SCANNERS: ${LOCAL_REAL_SCANNERS:-false}
+      ENABLE_NMAP: ${ENABLE_NMAP:-false}
+      SCANNER_TIMEOUT_SECONDS: ${SCANNER_TIMEOUT_SECONDS:-60}
+      SCANNER_MAX_RESULTS: ${SCANNER_MAX_RESULTS:-200}
+      SCAN_STALE_AFTER_SECONDS: ${SCAN_STALE_AFTER_SECONDS:-1800}
+      NUCLEI_TEMPLATES_PATH: ${NUCLEI_TEMPLATES_PATH:-}
+      LAB_MODE: ${LAB_MODE:-false}
+      ALLOWED_TARGET_DOMAINS: ${ALLOWED_TARGET_DOMAINS:-}
+      ALLOWED_LAB_TARGETS: ${ALLOWED_LAB_TARGETS:-admin.lab.local:8088,legacy.lab.local:8088,files.lab.local:8088}
+      LOCAL_REAL_SCOPE_TARGET: ${LOCAL_REAL_SCOPE_TARGET:-perimeter.lab.local:8088}
+    depends_on:
+      backend:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-}
+        VITE_DEMO_MODE: ${VITE_DEMO_MODE:-false}
+    ports:
+      - "3000:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-spectrascope}
+      POSTGRES_USER: ${POSTGRES_USER:-spectrascope}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-spectrascope}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-spectrascope} -d ${POSTGRES_DB:-spectrascope}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres_data:
