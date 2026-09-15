@@ -84,6 +84,6 @@ python ops/compose_smoke_ci.py
 
 ## Scope
 
-This is a single-workspace portfolio release candidate, not a hosted multi-tenant security service. Internet-facing deployment still requires TLS, unique secrets, backups, retention rules and an independent security review. See [SECURITY.md](SECURITY.md).
+This is a single-workspace portfolio project, not a hosted multi-tenant security service. Internet-facing deployment still requires TLS, unique secrets, backups, retention rules and an independent security review. See [SECURITY.md](SECURITY.md).
 
 Licensed under [MIT](LICENSE).

@@ -1,6 +1,6 @@
 {
   "name": "spectrascope",
-  "version": "1.0.0-rc.1",
+  "version": "1.0.0",
   "description": "Safe-by-default external attack-surface analysis platform",
   "private": true,
   "repository": "https://github.com/lukianchik/SpectraScope",

@@ -21,7 +21,7 @@ settings = get_settings()
 
 app = FastAPI(
     title="SpectraScope API",
-    version="1.0.0-rc.1",
+    version="1.0.0",
     description="API for authorized external attack-surface discovery and defensive analysis.",
 )
 
