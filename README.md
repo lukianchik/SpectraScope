@@ -52,7 +52,7 @@ The default stack uses deterministic preview findings. The API, database, queue,
 
 | Mode | Use |
 | --- | --- |
-| Preview | Safe portfolio demo with deterministic data |
+| Preview | Deterministic demonstration without external scanner execution |
 | LAB_MODE | HTTP checks against allowlisted local demo services |
 | Local real | Real scanners restricted to the bundled lab |
 | Real | Explicitly enabled scanners restricted by ALLOWED_TARGET_DOMAINS |
@@ -82,8 +82,8 @@ docker compose up -d --build
 python ops/compose_smoke_ci.py
 ~~~
 
-## Scope
+## Research disclaimer
 
-This is a single-workspace portfolio project, not a hosted multi-tenant security service. Internet-facing deployment still requires TLS, unique secrets, backups, retention rules and an independent security review. See [SECURITY.md](SECURITY.md).
+SpectraScope is an experimental learning and research project developed with AI-assisted tools. It is provided as-is and makes no claim of completeness, professional certification or fitness for production use. Internet-facing deployment requires TLS, unique secrets, backups, retention rules and an independent security review. See [SECURITY.md](SECURITY.md).
 
 Licensed under [MIT](LICENSE).
